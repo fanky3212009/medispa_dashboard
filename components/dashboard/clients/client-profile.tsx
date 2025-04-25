@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { updateClient } from "@/lib/services/clients"
-import { Client, ClientProfileProps } from "@/types/client"
+import { Client, ClientProfileProps, SerializedClient } from "@/types/client"
 import { toast } from "sonner"
 
 export function ClientProfile({ client }: ClientProfileProps) {
@@ -49,23 +49,48 @@ export function ClientProfile({ client }: ClientProfileProps) {
   const handleAddFunds = async () => {
     try {
       setIsLoading(true)
-      // Convert amount to a fixed decimal string to ensure proper decimal handling
-      const currentBalance = parseFloat(client.balance);
-      const newBalance = (currentBalance + Number(amount)).toFixed(2);
-      await updateClient(client.id, { balance: parseFloat(newBalance) });
-      setEditedClient(prev => ({
-        ...prev,
-        balance: newBalance
-      }));
+
+      // Create a treatment record for the fund addition
+      const response = await fetch(`/api/clients/${client.id}/treatment-records`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          date: new Date().toISOString(),
+          staffName: 'System', // Or could be the logged-in user's name
+          notes: 'Added funds to balance',
+          type: 'FUND_ADDITION',
+          treatments: [{ name: 'Fund Addition', price: Number(amount) }]
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to add funds')
+      }
+
+      const data = await response.json()
       toast.success(`Successfully added CA$ ${Number(amount).toFixed(2)} to balance`)
       setIsAddingFunds(false)
       setAmount("")
+
+      // Refresh page to show updated balance
+      window.location.reload()
     } catch (error) {
       console.error('Error adding funds:', error)
       toast.error('Failed to add funds to balance')
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const formatDate = (date: Date | null | undefined) => {
+    if (!date) return 'Not set'
+    return new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric'
+    })
   }
 
   return (
@@ -97,7 +122,7 @@ export function ClientProfile({ client }: ClientProfileProps) {
                   <Label htmlFor="phone">Phone</Label>
                   <Input
                     id="phone"
-                    value={editedClient.phone}
+                    value={editedClient.phone ?? ''}
                     onChange={(e) => setEditedClient({ ...editedClient, phone: e.target.value })}
                   />
                 </div>
@@ -113,14 +138,14 @@ export function ClientProfile({ client }: ClientProfileProps) {
                   <Label htmlFor="occupation">Occupation</Label>
                   <Input
                     id="occupation"
-                    value={editedClient.occupation || ''}
+                    value={editedClient.occupation ?? ''}
                     onChange={(e) => setEditedClient({ ...editedClient, occupation: e.target.value })}
                   />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="maritalStatus">Marital Status</Label>
                   <Select
-                    value={editedClient.maritalStatus}
+                    value={editedClient.maritalStatus ?? undefined}
                     onValueChange={(value) => setEditedClient({ ...editedClient, maritalStatus: value })}
                   >
                     <SelectTrigger>
@@ -138,7 +163,7 @@ export function ClientProfile({ client }: ClientProfileProps) {
                   <Label htmlFor="consultant">Consultant</Label>
                   <Input
                     id="consultant"
-                    value={editedClient.consultant || ''}
+                    value={editedClient.consultant ?? ''}
                     onChange={(e) => setEditedClient({ ...editedClient, consultant: e.target.value })}
                   />
                 </div>
@@ -165,31 +190,27 @@ export function ClientProfile({ client }: ClientProfileProps) {
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Date of Birth</p>
-              <p>{new Date(client.dob).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'numeric',
-                day: 'numeric'
-              })}</p>
+              <p>{formatDate(client.dob)}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Gender</p>
-              <p>{client.gender}</p>
+              <p>{client.gender ?? 'Not set'}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Occupation</p>
-              <p>{client.occupation}</p>
+              <p>{client.occupation ?? 'Not set'}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Marital Status</p>
-              <p>{client.maritalStatus}</p>
+              <p>{client.maritalStatus ?? 'Not set'}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Referred By</p>
-              <p>{client.referredBy}</p>
+              <p>{client.referredBy ?? 'Not set'}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Consultant</p>
-              <p>{client.consultant}</p>
+              <p>{client.consultant ?? 'Not set'}</p>
             </div>
           </div>
         </CardContent>
@@ -213,7 +234,7 @@ export function ClientProfile({ client }: ClientProfileProps) {
                 <div className="grid gap-2">
                   <Label htmlFor="skinType">Skin Type</Label>
                   <Select
-                    value={client.skinAssessment?.skinType}
+                    value={client.skinAssessment?.skinType ?? undefined}
                     onValueChange={(value) => {
                       // Handle skin type change
                     }}
@@ -336,8 +357,10 @@ export function ClientProfile({ client }: ClientProfileProps) {
                 </div>
               </DialogContent>
             </Dialog>
-            <Button variant="outline" size="sm">
-              View History
+            <Button variant="outline" size="sm" asChild>
+              <Link href={`/dashboard/clients/${client.id}/balance`}>
+                View History
+              </Link>
             </Button>
           </div>
         </CardHeader>

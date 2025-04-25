@@ -17,6 +17,7 @@ export interface TreatmentRecord {
   totalAmount: Decimal
   staffName: string
   notes: string | null
+  type: string
   clientId: string
   treatments: Treatment[]
 }
@@ -24,6 +25,7 @@ export interface TreatmentRecord {
 export interface SerializedTreatmentRecord extends Omit<TreatmentRecord, 'totalAmount' | 'treatments'> {
   totalAmount: string
   treatments: SerializedTreatment[]
+  type: string
 }
 
 export interface ClientTreatmentRecordsProps {

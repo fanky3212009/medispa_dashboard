@@ -33,9 +33,13 @@ export async function POST(
 ) {
   try {
     const body = await request.json()
-    const { date, staffName, notes, treatments } = body
+    const { date, staffName, notes, treatments, type = "TREATMENT" } = body
 
-    const totalAmount = treatments.reduce((sum: number, t: { price: number }) => sum + t.price, 0)
+    // For FUND_ADDITION, totalAmount is positive (increasing balance)
+    // For TREATMENT, totalAmount is from treatments sum (decreasing balance)
+    const totalAmount = type === "FUND_ADDITION" 
+      ? Number(treatments[0].price)
+      : treatments.reduce((sum: number, t: { price: number }) => sum + t.price, 0)
 
     const treatmentRecord = await prisma.$transaction(async (tx) => {
       // First, create the treatment record
@@ -44,26 +48,27 @@ export async function POST(
           date: new Date(date),
           staffName,
           notes,
+          type,
           totalAmount,
           clientId: params.id,
-          treatments: {
+          treatments: type === "TREATMENT" ? {
             create: treatments.map((t: { name: string; price: number }) => ({
               name: t.name,
               price: t.price
             }))
-          }
+          } : undefined
         },
         include: {
           treatments: true
         }
       })
 
-      // Then, update the client's balance
+      // Update the client's balance
       await tx.client.update({
         where: { id: params.id },
         data: {
           balance: {
-            decrement: totalAmount
+            [type === "FUND_ADDITION" ? "increment" : "decrement"]: totalAmount
           }
         }
       })

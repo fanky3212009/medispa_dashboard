@@ -89,6 +89,7 @@ model TreatmentRecord {
   totalAmount Decimal  @db.Decimal(10, 2)
   staffName   String
   notes       String?
+  type        String   // "TREATMENT" or "FUND_ADDITION"
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -98,6 +99,7 @@ model TreatmentRecord {
   treatments Treatment[]
 
   @@index([clientId])
+  @@index([type])
 }
 
 model Treatment {
