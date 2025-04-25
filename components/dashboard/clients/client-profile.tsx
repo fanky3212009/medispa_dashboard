@@ -17,7 +17,7 @@ import { toast } from "sonner"
 export function ClientProfile({ client }: ClientProfileProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [isAddingFunds, setIsAddingFunds] = useState(false)
-  const [editedClient, setEditedClient] = useState<Client>(client)
+  const [editedClient, setEditedClient] = useState<SerializedClient>(client)
   const [amount, setAmount] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
@@ -26,13 +26,14 @@ export function ClientProfile({ client }: ClientProfileProps) {
       const updateData = {
         name: editedClient.name,
         email: editedClient.email,
-        phone: editedClient.phone,
+        phone: editedClient.phone || undefined,
         occupation: editedClient.occupation || undefined,
         maritalStatus: editedClient.maritalStatus || undefined,
         dob: editedClient.dob ? new Date(editedClient.dob).toISOString() : undefined,
         gender: editedClient.gender || undefined,
         referredBy: editedClient.referredBy || undefined,
-        consultant: editedClient.consultant || undefined
+        consultant: editedClient.consultant || undefined,
+        balance: editedClient.balance ? parseFloat(editedClient.balance) : undefined
       }
       await updateClient(client.id, updateData)
       setIsEditing(false)
@@ -49,12 +50,13 @@ export function ClientProfile({ client }: ClientProfileProps) {
     try {
       setIsLoading(true)
       // Convert amount to a fixed decimal string to ensure proper decimal handling
-      const newBalance = (Number(client.balance) + Number(amount)).toFixed(2)
-      await updateClient(client.id, { balance: Number(newBalance) })
+      const currentBalance = parseFloat(client.balance);
+      const newBalance = (currentBalance + Number(amount)).toFixed(2);
+      await updateClient(client.id, { balance: parseFloat(newBalance) });
       setEditedClient(prev => ({
         ...prev,
-        balance: Number(newBalance)
-      }))
+        balance: newBalance
+      }));
       toast.success(`Successfully added CA$ ${Number(amount).toFixed(2)} to balance`)
       setIsAddingFunds(false)
       setAmount("")
@@ -163,7 +165,11 @@ export function ClientProfile({ client }: ClientProfileProps) {
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Date of Birth</p>
-              <p>{new Date(client.dob).toLocaleDateString()}</p>
+              <p>{new Date(client.dob).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'numeric',
+                day: 'numeric'
+              })}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Gender</p>
@@ -355,4 +361,3 @@ export function ClientProfile({ client }: ClientProfileProps) {
     </div>
   )
 }
-

@@ -79,6 +79,9 @@ export function ClientTreatmentRecords({ clientId }: ClientTreatmentRecordsProps
         notes: '',
         treatments: [{ name: '', price: 0 }]
       })
+
+      // Refresh the page to update client's balance
+      window.location.reload()
     } catch (error) {
       console.error('Error adding treatment record:', error)
     }
@@ -217,7 +220,7 @@ export function ClientTreatmentRecords({ clientId }: ClientTreatmentRecordsProps
                           </TableCell>
                         )}
                         <TableCell>{treatment.name}</TableCell>
-                        <TableCell>${treatment.price.toFixed(2)}</TableCell>
+                        <TableCell>${Number(treatment.price).toFixed(2)}</TableCell>
                         {index === 0 && <TableCell rowSpan={record.treatments.length}>{record.staffName}</TableCell>}
                         {index === 0 && <TableCell rowSpan={record.treatments.length}>{record.notes}</TableCell>}
                       </TableRow>
@@ -226,7 +229,7 @@ export function ClientTreatmentRecords({ clientId }: ClientTreatmentRecordsProps
                       <TableCell colSpan={2} className="text-right font-bold">
                         Total:
                       </TableCell>
-                      <TableCell className="font-bold">${record.totalAmount.toFixed(2)}</TableCell>
+                      <TableCell className="font-bold">${Number(record.totalAmount).toFixed(2)}</TableCell>
                       <TableCell colSpan={2}></TableCell>
                     </TableRow>
                   </React.Fragment>
@@ -239,4 +242,3 @@ export function ClientTreatmentRecords({ clientId }: ClientTreatmentRecordsProps
     </div>
   )
 }
-

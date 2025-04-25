@@ -18,14 +18,15 @@ export async function GET(
       )
     }
 
-    // Now fetch treatment records separately
-    const treatments = await prisma.$queryRaw`
-      SELECT tr.*, t.name as treatment_name, t.price as treatment_price
-      FROM "TreatmentRecord" tr
-      LEFT JOIN "Treatment" t ON t."treatmentRecordId" = tr.id
-      WHERE tr."clientId" = ${id}
-      ORDER BY tr.date DESC
-    `
+    const treatments = await prisma.treatmentRecord.findMany({
+      where: { clientId: id },
+      include: {
+        treatments: true
+      },
+      orderBy: {
+        date: 'desc'
+      }
+    })
     
     return NextResponse.json(treatments)
   } catch (error) {
@@ -35,4 +36,4 @@ export async function GET(
       { status: 500 }
     )
   }
-} 
+}
