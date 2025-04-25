@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 import prisma from "@/lib/db"
 import { ClientProfile } from "@/components/dashboard/clients/client-profile"
 import { ClientTreatmentRecords } from "@/components/dashboard/clients/client-treatment-records"
+import { ClientForms } from "@/components/dashboard/clients/client-forms"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { Client, SerializedClient } from "@/types/client"
 import type { SerializedTreatmentRecord, Treatment, TreatmentRecord } from "@/types/treatment"
@@ -71,15 +72,7 @@ export default async function ClientPage({ params }: ClientPageProps) {
           <ClientTreatmentRecords clientId={serializedClient.id} />
         </TabsContent>
         <TabsContent value="forms" className="mt-4">
-          <div className="flex flex-col items-center justify-center rounded-md border border-dashed p-8 text-center">
-            <h3 className="mt-2 text-lg font-semibold">Consent Forms</h3>
-            <p className="mb-4 mt-1 text-sm text-muted-foreground">View and manage client consent forms</p>
-            <img
-              src="/images/client-profile-2.png"
-              alt="Consent Form Template"
-              className="max-w-md border rounded-md shadow-sm"
-            />
-          </div>
+          <ClientForms clientId={serializedClient.id} />
         </TabsContent>
       </Tabs>
     </div>
