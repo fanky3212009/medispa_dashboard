@@ -1,12 +1,33 @@
-let userConfig = undefined
+import { exec } from 'child_process';
+import { promisify } from 'util';
+
+const execAsync = promisify(exec);
+
+const generatePrisma = async () => {
+  if (process.env.NODE_ENV === 'production') {
+    try {
+      await execAsync('prisma generate');
+    } catch (error) {
+      console.error('Error generating Prisma Client:', error);
+    }
+  }
+};
+
+let userConfig = undefined;
 try {
-  userConfig = await import('./v0-user-next.config')
+  userConfig = await import('./v0-user-next.config');
 } catch (e) {
   // ignore error
 }
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      generatePrisma();
+    }
+    return config;
+  },
   output: 'standalone',
   eslint: {
     ignoreDuringBuilds: true,
@@ -20,10 +41,10 @@ const nextConfig = {
   experimental: {
     webpackBuildWorker: true,
     parallelServerBuildTraces: true,
-    parallelServerCompiles: true,
-    outputFileTracingIncludes: {
-      '/*': ['./node_modules/.prisma/**/*']
-    }
+    parallelServerCompiles: true
+  },
+  outputFileTracingIncludes: {
+    '/*': ['./node_modules/.prisma/**/*']
   },
 }
 
