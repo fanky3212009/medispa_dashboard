@@ -72,7 +72,7 @@ export default async function ClientPage({ params }: ClientPageProps) {
           <ClientTreatmentRecords clientId={serializedClient.id} />
         </TabsContent>
         <TabsContent value="forms" className="mt-4">
-          <ClientForms clientId={serializedClient.id} />
+          <ClientForms clientId={serializedClient.id} clientName={client.name} />
         </TabsContent>
       </Tabs>
     </div>

@@ -1,41 +1,41 @@
 "use client"
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { ConsentForm } from "@/types/consent-form"
 
 interface FormViewerProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  form: {
-    type: string
-    signedDate: string
-    name: string
-    treatmentType: string
-    beforeTreatmentChecks: string[]
-    radioFrequencyDetails?: string
-  }
+  form: ConsentForm
 }
 
 export function FormViewer({ open, onOpenChange, form }: FormViewerProps) {
+  if (!form) {
+    return null
+  }
+
+  const formData = (form.formData as {
+    treatmentType: string
+    beforeTreatmentChecks: string[]
+    radioFrequencyDetails?: string
+  }) || { treatmentType: "", beforeTreatmentChecks: [] }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh]">
         <DialogHeader>
-          <DialogTitle>{form.type}</DialogTitle>
+          <DialogTitle>{form.type} Consent Form</DialogTitle>
         </DialogHeader>
         <div className="space-y-6 p-6">
           <div className="border-b pb-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-muted-foreground">Client Name</p>
-                <p className="font-medium">{form.name}</p>
-              </div>
-              <div>
                 <p className="text-sm text-muted-foreground">Treatment Type</p>
-                <p className="font-medium">{form.treatmentType}</p>
+                <p className="font-medium">{formData.treatmentType}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Signed Date</p>
-                <p className="font-medium">{form.signedDate}</p>
+                <p className="font-medium">{new Date(form.signedAt).toLocaleDateString()}</p>
               </div>
             </div>
           </div>
@@ -43,16 +43,16 @@ export function FormViewer({ open, onOpenChange, form }: FormViewerProps) {
           <div>
             <h3 className="font-semibold mb-3">Before Treatment Conditions</h3>
             <div className="space-y-2">
-              {form.beforeTreatmentChecks.map((check, index) => (
+              {formData.beforeTreatmentChecks?.map((check, index) => (
                 <div key={index} className="flex items-start">
                   <span className="text-primary mr-2">✓</span>
                   <p>{check}</p>
                 </div>
               ))}
-              {form.radioFrequencyDetails && (
+              {formData.radioFrequencyDetails && (
                 <div className="ml-6 mt-2">
                   <p className="text-sm text-muted-foreground">Treatment Details:</p>
-                  <p>{form.radioFrequencyDetails}</p>
+                  <p>{formData.radioFrequencyDetails}</p>
                 </div>
               )}
             </div>
@@ -88,8 +88,8 @@ export function FormViewer({ open, onOpenChange, form }: FormViewerProps) {
               possible skin reactions, understand and agree to the instructions to be followed during and after the treatment.
             </p>
             <div className="mt-4">
-              <p className="text-sm text-muted-foreground">Authorized by</p>
-              <p className="font-medium">{form.name}</p>
+              <p className="text-sm text-muted-foreground">Electronic Signature</p>
+              <p className="font-medium">{form.signature}</p>
             </div>
           </div>
         </div>

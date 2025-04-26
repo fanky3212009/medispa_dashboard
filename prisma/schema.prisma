@@ -48,6 +48,7 @@ model Client {
   appointments      Appointment[]
   treatmentRecords TreatmentRecord[]
   skinAssessment   SkinAssessment?
+  consentForms     ConsentForm[]
 }
 
 model Service {
@@ -138,4 +139,26 @@ enum AppointmentStatus {
   CONFIRMED
   CANCELLED
   COMPLETED
+}
+
+enum ConsentFormType {
+  GENERAL_TREATMENT
+  BOTOX
+  FILLER
+}
+
+model ConsentForm {
+  id          String         @id @default(cuid())
+  type        ConsentFormType
+  signature   String
+  signedAt    DateTime       @default(now())
+  formData    Json
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  clientId    String
+  client      Client         @relation(fields: [clientId], references: [id])
+
+  @@unique([clientId, type])
+  @@index([clientId])
 }

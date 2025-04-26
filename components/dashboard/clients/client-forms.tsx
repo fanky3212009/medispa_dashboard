@@ -1,33 +1,73 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
+import { FormTypeDialog } from "./consent-forms/form-type-dialog"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { CalendarClock, Download, Eye } from "lucide-react"
 import { TreatmentConsentForm } from "./treatment-consent-form"
 import { FormViewer } from "./form-viewer"
+import { ConsentForm, ConsentFormType } from "@/types/consent-form"
+import { formatFormType, getFormDescription } from "@/lib/utils/format-form-type"
 
 interface ClientFormsProps {
   clientId: string
+  clientName: string
 }
 
-export function ClientForms({ clientId }: ClientFormsProps) {
+export function ClientForms({ clientId, clientName }: ClientFormsProps) {
+  const [showTypeDialog, setShowTypeDialog] = useState(false)
   const [showConsentForm, setShowConsentForm] = useState(false)
   const [showViewer, setShowViewer] = useState(false)
-  const [selectedForm, setSelectedForm] = useState<any>(null)
+  const [selectedForm, setSelectedForm] = useState<ConsentForm | null>(null)
+  const [forms, setForms] = useState<ConsentForm[]>([])
+  const [loading, setLoading] = useState(true)
+  const [selectedType, setSelectedType] = useState<ConsentFormType>("GENERAL_TREATMENT")
 
-  // In a real app, you would fetch the client's forms from your API
-  const forms = clientForms.filter((form) => form.clientId === clientId)
+  const fetchForms = async () => {
+    setLoading(true)
+    try {
+      const response = await fetch(`/api/clients/${clientId}/consent-forms`)
+      if (!response.ok) throw new Error('Failed to fetch forms')
+      const data = await response.json()
+      setForms(data)
+    } catch (error) {
+      console.error('Error fetching forms:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
-  const handleNewForm = () => {
+  useEffect(() => {
+    fetchForms()
+  }, [clientId])
+
+  const handleFormSubmitted = () => {
+    setShowConsentForm(false)
+    setShowTypeDialog(false)
+    fetchForms()
+  }
+
+  const handleTypeSelect = (type: ConsentFormType) => {
+    setSelectedType(type)
     setShowConsentForm(true)
   }
 
-  const handleFormSubmit = (data: any) => {
-    console.log('Form submitted:', data)
-    // In a real app, you would save this to your API
-    setShowConsentForm(false)
+  const handleNewForm = () => {
+    setShowTypeDialog(true)
+  }
+
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-48">
+        <div className="animate-pulse flex flex-col items-center gap-4">
+          <div className="h-8 w-32 bg-muted rounded"></div>
+          <div className="text-sm text-muted-foreground">Loading forms...</div>
+        </div>
+      </div>
+    )
   }
 
   if (forms.length === 0) {
@@ -38,11 +78,19 @@ export function ClientForms({ clientId }: ClientFormsProps) {
           <p className="mb-4 mt-1 text-sm text-muted-foreground">This client hasn't signed any treatment forms yet.</p>
           <Button onClick={handleNewForm}>Create New Form</Button>
         </div>
+        <FormTypeDialog
+          open={showTypeDialog}
+          onOpenChange={setShowTypeDialog}
+          onSelect={handleTypeSelect}
+          existingFormTypes={forms.map(form => form.type as ConsentFormType)}
+        />
         <TreatmentConsentForm
           open={showConsentForm}
           onOpenChange={setShowConsentForm}
-          onSubmit={handleFormSubmit}
-          clientName=""
+          clientId={clientId}
+          clientName={clientName}
+          type={selectedType}
+          onSubmitted={handleFormSubmitted}
         />
       </>
     )
@@ -50,56 +98,61 @@ export function ClientForms({ clientId }: ClientFormsProps) {
 
   return (
     <>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-semibold">Consent Forms</h2>
+        <Button onClick={handleNewForm}>Add Form</Button>
+      </div>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {forms.map((form) => (
           <Card key={form.id}>
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle>{form.type}</CardTitle>
-                <Badge variant={form.status === "signed" ? "default" : "secondary"}>
-                  {form.status}
-                </Badge>
+                <CardTitle>{formatFormType(form.type as ConsentFormType)}</CardTitle>
+                <Badge>Signed</Badge>
               </div>
               <CardDescription className="flex items-center pt-1">
                 <CalendarClock className="mr-1 h-3 w-3" />
-                {form.status === "signed" ? `Signed on ${form.signedDate}` : "Not signed"}
+                {new Date(form.signedAt).toLocaleDateString()}
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">{form.description}</p>
+              <p className="text-sm text-muted-foreground">
+                {getFormDescription(form.type as ConsentFormType)}
+              </p>
             </CardContent>
             <CardFooter className="flex justify-between">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  setSelectedForm({
-                    ...form,
-                    name: "John Doe", // In real app, get from form data
-                    treatmentType: form.type,
-                    beforeTreatmentChecks: ["Have used medications within the past two weeks"],
-                  })
+                  setSelectedForm(form)
                   setShowViewer(true)
                 }}
               >
                 <Eye className="mr-2 h-4 w-4" />
                 View
               </Button>
-              {form.status === "signed" && (
-                <Button variant="outline" size="sm">
-                  <Download className="mr-2 h-4 w-4" />
-                  Download
-                </Button>
-              )}
+              <Button variant="outline" size="sm">
+                <Download className="mr-2 h-4 w-4" />
+                Download
+              </Button>
             </CardFooter>
           </Card>
         ))}
       </div>
+      <FormTypeDialog
+        open={showTypeDialog}
+        onOpenChange={setShowTypeDialog}
+        onSelect={handleTypeSelect}
+        existingFormTypes={forms.map(form => form.type as ConsentFormType)}
+      />
       <TreatmentConsentForm
         open={showConsentForm}
         onOpenChange={setShowConsentForm}
-        onSubmit={handleFormSubmit}
-        clientName=""
+        clientId={clientId}
+        clientName={clientName}
+        type={selectedType}
+        onSubmitted={handleFormSubmitted}
       />
       {selectedForm && (
         <FormViewer
@@ -111,54 +164,3 @@ export function ClientForms({ clientId }: ClientFormsProps) {
     </>
   )
 }
-
-const clientForms = [
-  {
-    id: "form_template",
-    clientId: "all",
-    type: "Treatment Consent Form",
-    status: "template",
-    signedDate: "-",
-    description: "Standard treatment consent form including pre/post treatment requirements and conditions.",
-  },
-  {
-    id: "1",
-    clientId: "1",
-    type: "Botox Consent Form",
-    status: "signed",
-    signedDate: "Jul 15, 2023",
-    description: "Consent form for Botox treatment including risks, benefits, and aftercare instructions.",
-  },
-  {
-    id: "2",
-    clientId: "1",
-    type: "Facial Rejuvenation Consent",
-    status: "signed",
-    signedDate: "Jun 10, 2023",
-    description: "Consent form for facial rejuvenation treatment including procedure details and expected outcomes.",
-  },
-  {
-    id: "3",
-    clientId: "1",
-    type: "Medical History Form",
-    status: "signed",
-    signedDate: "May 5, 2023",
-    description: "Comprehensive medical history including allergies, medications, and previous treatments.",
-  },
-  {
-    id: "4",
-    clientId: "2",
-    type: "Chemical Peel Consent",
-    status: "signed",
-    signedDate: "Jun 30, 2023",
-    description: "Consent form for chemical peel treatment including potential side effects and recovery process.",
-  },
-  {
-    id: "5",
-    clientId: "3",
-    type: "Microdermabrasion Consent",
-    status: "signed",
-    signedDate: "Jul 10, 2023",
-    description: "Consent form for microdermabrasion treatment including procedure details and aftercare.",
-  },
-]
