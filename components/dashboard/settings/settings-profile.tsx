@@ -1,6 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { useAuth } from "@/components/auth-provider"
+import { createBrowserClient } from '@supabase/ssr'
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
@@ -10,7 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 
 const profileFormSchema = z.object({
   name: z.string().min(2, {
@@ -41,18 +43,29 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>
 type PasswordFormValues = z.infer<typeof passwordFormSchema>
 
 export function SettingsProfile() {
-  const { toast } = useToast()
+  const { user } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [isPasswordLoading, setIsPasswordLoading] = useState(false)
 
   const profileForm = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      name: "John Doe",
-      email: "john@example.com",
-      bio: "Medical spa owner and aesthetician with over 10 years of experience.",
+      name: user?.user_metadata?.name || user?.email?.split('@')[0] || '',
+      email: user?.email || '',
+      bio: user?.user_metadata?.bio || '',
     },
   })
+
+  // Update form when user data changes
+  useEffect(() => {
+    if (user) {
+      profileForm.reset({
+        name: user.user_metadata?.name || user.email?.split('@')[0] || '',
+        email: user.email || '',
+        bio: user.user_metadata?.bio || '',
+      })
+    }
+  }, [user, profileForm])
 
   const passwordForm = useForm<PasswordFormValues>({
     resolver: zodResolver(passwordFormSchema),
@@ -63,29 +76,77 @@ export function SettingsProfile() {
     },
   })
 
-  function onSubmitProfile(data: ProfileFormValues) {
+  async function onSubmitProfile(data: ProfileFormValues) {
     setIsLoading(true)
 
-    setTimeout(() => {
-      toast({
-        title: "Profile updated",
-        description: "Your profile has been updated successfully.",
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        email: data.email,
+        data: {
+          name: data.name,
+          bio: data.bio
+        }
       })
+
+      if (error) throw error
+
+      toast.success("Profile updated", {
+        description: "Your profile has been updated successfully."
+      })
+    } catch (error: any) {
+      toast.error("Update failed", {
+        description: error.message || "Failed to update profile"
+      })
+    } finally {
       setIsLoading(false)
-    }, 1000)
+    }
   }
 
-  function onSubmitPassword(data: PasswordFormValues) {
+  async function onSubmitPassword(data: PasswordFormValues) {
     setIsPasswordLoading(true)
 
-    setTimeout(() => {
-      toast({
-        title: "Password updated",
-        description: "Your password has been changed successfully.",
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+
+    try {
+      // First verify current password
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user?.email || '',
+        password: data.currentPassword
       })
-      setIsPasswordLoading(false)
+
+      if (signInError) {
+        toast.error("Password update failed", {
+          description: "Current password is incorrect"
+        })
+        return
+      }
+
+      // Then update to new password
+      const { error } = await supabase.auth.updateUser({
+        password: data.newPassword
+      })
+
+      if (error) throw error
+
+      toast.success("Password updated", {
+        description: "Your password has been changed successfully."
+      })
       passwordForm.reset()
-    }, 1000)
+    } catch (error: any) {
+      toast.error("Password update failed", {
+        description: error.message || "Failed to update password"
+      })
+    } finally {
+      setIsPasswordLoading(false)
+    }
   }
 
   return (
@@ -98,8 +159,11 @@ export function SettingsProfile() {
         <CardContent className="space-y-6">
           <div className="flex items-center gap-4">
             <Avatar className="h-24 w-24">
-              <AvatarImage src="/placeholder-user.jpg" alt="John Doe" />
-              <AvatarFallback>JD</AvatarFallback>
+              <AvatarImage
+                src={user?.user_metadata?.avatar_url || "/placeholder-user.jpg"}
+                alt={user?.email || ''}
+              />
+              <AvatarFallback>{user?.email?.[0]?.toUpperCase() || '?'}</AvatarFallback>
             </Avatar>
             <div>
               <Button variant="outline" size="sm">
@@ -222,4 +286,3 @@ export function SettingsProfile() {
     </div>
   )
 }
-

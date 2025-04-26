@@ -5,11 +5,12 @@ import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
+import { createBrowserClient } from '@supabase/ssr'
 
 import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 
 const formSchema = z.object({
   email: z.string().email({
@@ -22,7 +23,6 @@ const formSchema = z.object({
 
 export function LoginForm() {
   const router = useRouter()
-  const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -36,25 +36,31 @@ export function LoginForm() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true)
 
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+
     try {
-      // In a real app, you would call your authentication API here
-      console.log(values)
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      // For demo purposes, we'll just redirect to the dashboard
-      toast({
-        title: "Login successful",
-        description: "Welcome back to SkinPlus Medical Spa",
+      const { error, data } = await supabase.auth.signInWithPassword({
+        email: values.email,
+        password: values.password,
       })
 
+      if (error) {
+        toast.error("Login failed", {
+          description: error.message,
+        })
+        return
+      }
+
+      toast.success("Login successful", {
+        description: "Welcome back to SkinPlus Medical Spa",
+      })
       router.push("/dashboard")
-    } catch (error) {
-      toast({
-        title: "Login failed",
-        description: "Please check your credentials and try again.",
-        variant: "destructive",
+    } catch (error: any) {
+      toast.error("Login failed", {
+        description: error?.message || "An unexpected error occurred",
       })
     } finally {
       setIsLoading(false)
@@ -97,4 +103,3 @@ export function LoginForm() {
     </Form>
   )
 }
-
