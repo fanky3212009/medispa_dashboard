@@ -21,6 +21,9 @@ const nextConfig = {
     webpackBuildWorker: true,
     parallelServerBuildTraces: true,
     parallelServerCompiles: true,
+    outputFileTracingIncludes: {
+      '/*': ['./node_modules/.prisma/**/*']
+    }
   },
 }
 
