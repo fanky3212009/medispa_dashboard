@@ -1,5 +1,7 @@
 import { getBaseUrl } from "@/lib/utils"
 import { SerializedClient } from "@/types/client"
+import prisma from "@/lib/db"
+import { NextResponse } from "next/server"
 
 export async function getClients(): Promise<SerializedClient[]> {
   try {
@@ -16,11 +18,20 @@ export async function getClients(): Promise<SerializedClient[]> {
 
 export async function getClientById(id: string): Promise<SerializedClient> {
   try {
-    const response = await fetch(`${getBaseUrl()}/api/clients/${id}`)
-    if (!response.ok) {
-      throw new Error('Failed to fetch client')
+    const client = await prisma.client.findUnique({
+      where: { id },
+      include: {
+        appointments: true
+      }
+    })
+    if (!client) {
+      throw new Error('Client not found')
     }
-    return response.json()
+    const serializedClient = {
+      ...client,
+      balance: client.balance.toString()
+    }
+    return serializedClient
   } catch (error) {
     console.error('Error fetching client:', error)
     throw new Error('Failed to fetch client')

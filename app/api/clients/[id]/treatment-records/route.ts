@@ -42,7 +42,22 @@ export async function POST(
       : treatments.reduce((sum: number, t: { price: number }) => sum + t.price, 0)
 
     const treatmentRecord = await prisma.$transaction(async (tx) => {
-      // First, create the treatment record
+      // Get current client balance
+      const client = await tx.client.findUnique({
+        where: { id: params.id },
+        select: { balance: true }
+      })
+
+      if (!client) {
+        throw new Error("Client not found")
+      }
+
+      // Calculate new balance
+      const newBalance = type === "FUND_ADDITION"
+        ? Number(client.balance) + Number(totalAmount)
+        : Number(client.balance) - Number(totalAmount)
+
+      // First, create the treatment record with balanceAfter
       const record = await tx.treatmentRecord.create({
         data: {
           date: new Date(date),
@@ -50,6 +65,7 @@ export async function POST(
           notes,
           type,
           totalAmount,
+          balanceAfter: newBalance,
           clientId: params.id,
           treatments: type === "TREATMENT" ? {
             create: treatments.map((t: { name: string; price: number }) => ({
@@ -67,9 +83,7 @@ export async function POST(
       await tx.client.update({
         where: { id: params.id },
         data: {
-          balance: {
-            [type === "FUND_ADDITION" ? "increment" : "decrement"]: totalAmount
-          }
+          balance: newBalance
         }
       })
 

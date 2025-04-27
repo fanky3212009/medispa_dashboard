@@ -15,15 +15,18 @@ export interface TreatmentRecord {
   id: string
   date: string
   totalAmount: Decimal
+  balanceAfter: Decimal
   staffName: string
   notes: string | null
   type: string
   clientId: string
   treatments: Treatment[]
+  createdAt: Date
 }
 
-export interface SerializedTreatmentRecord extends Omit<TreatmentRecord, 'totalAmount' | 'treatments'> {
+export interface SerializedTreatmentRecord extends Omit<TreatmentRecord, 'totalAmount' | 'balanceAfter' | 'treatments'> {
   totalAmount: string
+  balanceAfter: string
   treatments: SerializedTreatment[]
   type: string
 }

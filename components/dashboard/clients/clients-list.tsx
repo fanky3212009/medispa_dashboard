@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Client } from ".prisma/client"
+import { SerializedClient } from "@/types/client"
 import { getClients } from "@/lib/services/clients"
 import { ClientCard } from "./client-card"
 import { Button } from "@/components/ui/button"
@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Filter, Plus, Search } from "lucide-react"
 
 export function ClientsList() {
-  const [clients, setClients] = useState<Client[]>([])
+  const [clients, setClients] = useState<SerializedClient[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -37,8 +37,8 @@ export function ClientsList() {
   }
 
   const filteredClients = clients.filter(
-    (client) => 
-      client.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    (client) =>
+      client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       client.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (client.phone && client.phone.includes(searchQuery))
   )
@@ -106,4 +106,3 @@ export function ClientsList() {
     </div>
   )
 }
-

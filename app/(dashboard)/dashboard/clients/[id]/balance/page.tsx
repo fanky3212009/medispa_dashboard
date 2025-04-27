@@ -1,18 +1,38 @@
-import type { TreatmentRecord } from "@/types/treatment"
+import type { SerializedTreatmentRecord, SerializedTreatment } from "@/types/treatment"
+import type { Prisma } from "@prisma/client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { getBaseUrl } from "@/lib/utils"
 import { getClientById } from "@/lib/services/clients"
+import prisma from "@/lib/db"
 
-async function getClientBalanceHistory(id: string): Promise<TreatmentRecord[]> {
-  const response = await fetch(`${getBaseUrl()}/api/clients/${id}/treatments`, {
-    cache: 'no-store'
+async function getClientBalanceHistory(id: string): Promise<SerializedTreatmentRecord[]> {
+  const treatments = await prisma.treatmentRecord.findMany({
+    where: { clientId: id },
+    include: {
+      treatments: true
+    },
+    orderBy: {
+      createdAt: 'desc'
+    }
   })
-  if (!response.ok) throw new Error('Failed to fetch balance history')
-  return response.json()
+
+  type TreatmentRecordWithTreatments = Prisma.TreatmentRecordGetPayload<{
+    include: { treatments: true }
+  }>
+
+  return (treatments as TreatmentRecordWithTreatments[]).map(treatment => ({
+    ...treatment,
+    date: treatment.date.toISOString(), // Convert Date to string
+    totalAmount: treatment.totalAmount.toString(),
+    balanceAfter: treatment.balanceAfter.toString(),
+    treatments: treatment.treatments.map(t => ({
+      ...t,
+      price: t.price.toString()
+    }))
+  }));
 }
 
 export default async function BalanceHistoryPage({ params }: { params: { id: string } }) {
@@ -21,22 +41,6 @@ export default async function BalanceHistoryPage({ params }: { params: { id: str
     getClientById(params.id),
     getClientBalanceHistory(params.id)
   ])
-
-  // Calculate running balances from newest to oldest
-  const reversedRecords = [...records].reverse()
-  let runningBalance = 0 // We'll calculate this from oldest to newest
-
-  // First pass: calculate final balance to use as starting point
-  records.forEach(record => {
-    if (record.type === "FUND_ADDITION") {
-      runningBalance += Number(record.totalAmount)
-    } else {
-      runningBalance -= Number(record.totalAmount)
-    }
-  })
-
-  // Reset running balance for display
-  let displayBalance = runningBalance
 
   return (
     <div>
@@ -57,7 +61,7 @@ export default async function BalanceHistoryPage({ params }: { params: { id: str
             <CardTitle>Current Balance</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">CA$ {runningBalance.toFixed(2)}</p>
+            <p className="text-2xl font-bold">CA$ {client.balance}</p>
           </CardContent>
         </Card>
         <Card>
@@ -77,23 +81,25 @@ export default async function BalanceHistoryPage({ params }: { params: { id: str
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {reversedRecords.map((record) => {
-                    // For display, subtract from final balance for older transactions
-                    const effect = record.type === "FUND_ADDITION" ? Number(record.totalAmount) : -Number(record.totalAmount)
-                    const currentBalance = displayBalance
-                    displayBalance -= effect // Move backwards in time
-
+                  {records.map((record) => {
                     return (
                       <TableRow key={record.id}>
                         <TableCell>
-                          {new Date(record.date).toLocaleDateString()}
+                          {new Date(record.createdAt).toLocaleDateString("en-CA", {
+                            year: "numeric",
+                            month: "2-digit",
+                            day: "2-digit",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            second: "2-digit",
+                          })}
                         </TableCell>
                         <TableCell>
                           {record.type === "FUND_ADDITION" ? (
                             "Added Funds"
                           ) : (
                             <div className="space-y-1">
-                              {record.treatments.map((t) => (
+                              {record.treatments.map((t: SerializedTreatment) => (
                                 <div key={t.id}>{t.name} - ${Number(t.price).toFixed(2)}</div>
                               ))}
                             </div>
@@ -104,7 +110,7 @@ export default async function BalanceHistoryPage({ params }: { params: { id: str
                         </TableCell>
                         <TableCell>{record.staffName}</TableCell>
                         <TableCell>
-                          ${currentBalance.toFixed(2)}
+                          ${Number(record.balanceAfter).toFixed(2)}
                         </TableCell>
                       </TableRow>
                     )

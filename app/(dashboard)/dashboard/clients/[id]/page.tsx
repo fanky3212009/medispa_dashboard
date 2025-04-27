@@ -7,6 +7,7 @@ import { ClientForms } from "@/components/dashboard/clients/client-forms"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { Client, SerializedClient } from "@/types/client"
 import type { SerializedTreatmentRecord, Treatment, TreatmentRecord } from "@/types/treatment"
+import type { Decimal } from "@prisma/client/runtime/library"
 
 export const metadata: Metadata = {
   title: "Client Profile | SkinPlus Medical Spa",
@@ -25,6 +26,7 @@ export default async function ClientPage({ params }: ClientPageProps) {
   type ClientWithRecords = Client & {
     treatmentRecords: (TreatmentRecord & {
       treatments: Treatment[]
+      balanceAfter: Decimal
     })[]
   }
 
@@ -49,6 +51,7 @@ export default async function ClientPage({ params }: ClientPageProps) {
     treatmentRecords: client.treatmentRecords?.map(record => ({
       ...record,
       totalAmount: record.totalAmount.toString(),
+      balanceAfter: record.balanceAfter.toString(),
       treatments: record.treatments.map(treatment => ({
         ...treatment,
         price: treatment.price.toString()
