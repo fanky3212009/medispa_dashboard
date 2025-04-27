@@ -58,3 +58,5 @@
   }
 }
 
+/* Import signature pad styles */
+@import "../styles/signature-pad.css";

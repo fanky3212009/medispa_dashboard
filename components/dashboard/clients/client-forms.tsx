@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { toast } from "@/components/ui/use-toast"
 import { Button } from "@/components/ui/button"
 import { FormTypeDialog } from "./consent-forms/form-type-dialog"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -132,7 +133,41 @@ export function ClientForms({ clientId, clientName }: ClientFormsProps) {
                 <Eye className="mr-2 h-4 w-4" />
                 View
               </Button>
-              <Button variant="outline" size="sm">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async (event) => {
+                  const button = event.currentTarget as HTMLButtonElement
+                  button.disabled = true
+                  try {
+                    const response = await fetch(`/api/clients/${clientId}/consent-forms/${form.id}/download`)
+                    if (!response.ok) throw new Error('Failed to download PDF')
+
+                    const blob = await response.blob()
+                    const url = window.URL.createObjectURL(blob)
+                    const a = document.createElement('a')
+                    a.href = url
+                    a.download = `consent-form-${form.id}.pdf`
+                    document.body.appendChild(a)
+                    a.click()
+                    window.URL.revokeObjectURL(url)
+                    document.body.removeChild(a)
+                    toast({
+                      title: "Success",
+                      description: "Your consent form has been downloaded.",
+                    })
+                  } catch (error) {
+                    console.error('Error downloading form:', error)
+                    toast({
+                      title: "Error",
+                      description: "Failed to download the form. Please try again.",
+                      variant: "destructive",
+                    })
+                  } finally {
+                    button.disabled = false
+                  }
+                }}
+              >
                 <Download className="mr-2 h-4 w-4" />
                 Download
               </Button>

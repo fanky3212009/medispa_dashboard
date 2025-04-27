@@ -1,4 +1,5 @@
-import { useRef, useState } from "react"
+import { useCallback, useRef, useState } from "react"
+import { SignaturePad } from "@/components/ui/signature-pad"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -100,23 +101,20 @@ export function BaseConsentForm({ open, onOpenChange, clientId, clientName, type
                   <CardTitle>Agreement</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex flex-col gap-2">
-                    <label htmlFor="signature">Signature</label>
-                    <input
-                      type="text"
-                      id="signature"
-                      name="signature"
-                      className="border rounded p-2"
-                      value={signature}
-                      onChange={(e) => setSignature(e.target.value)}
-                      required
-                      placeholder="Type your full name to sign"
-                    />
+                  <div className="space-y-4">
+                    <div className="flex flex-col gap-2">
+                      <label>Signature</label>
+                      <SignaturePad
+                        value={signature}
+                        onChange={setSignature}
+                        className="min-h-[200px]"
+                      />
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      By signing above, I confirm that I have read and understood all the information provided
+                      and consent to the treatment.
+                    </p>
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    By typing my name above, I confirm that I have read and understood all the information provided
-                    and consent to the treatment.
-                  </p>
                 </CardContent>
               </Card>
             </div>

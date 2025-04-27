@@ -91,8 +91,14 @@ export function FormViewer({ open, onOpenChange, form }: FormViewerProps) {
                 possible skin reactions, understand and agree to the instructions to be followed during and after the treatment.
               </p>
               <div className="mt-4">
-                <p className="text-sm text-muted-foreground">Electronic Signature</p>
-                <p className="font-medium">{form.signature}</p>
+                <p className="text-sm text-muted-foreground">Signature</p>
+                <div className="mt-2 border rounded-md p-2 bg-white">
+                  <img
+                    src={form.signature}
+                    alt="Client Signature"
+                    className="max-h-[100px] object-contain"
+                  />
+                </div>
               </div>
             </div>
           </div>
