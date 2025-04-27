@@ -1,6 +1,7 @@
 import { exec } from 'child_process';
 import { promisify } from 'util';
 
+
 const execAsync = promisify(exec);
 
 const generatePrisma = async () => {
@@ -22,6 +23,7 @@ try {
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  serverExternalPackages: ["pdfkit"],
   webpack: (config, { isServer }) => {
     if (isServer) {
       generatePrisma();
