@@ -29,7 +29,8 @@ export function ClientTreatmentRecords({ clientId }: ClientTreatmentRecordsProps
         const response = await fetch(`/api/clients/${clientId}/treatments`)
         if (!response.ok) throw new Error('Failed to fetch treatment records')
         const data = await response.json()
-        setTreatmentRecords(data)
+        // Filter to show only TREATMENT type records
+        setTreatmentRecords(data.filter((record: TreatmentRecord) => record.type === "TREATMENT"))
       } catch (error) {
         console.error('Error fetching treatment records:', error)
       } finally {
@@ -79,7 +80,8 @@ export function ClientTreatmentRecords({ clientId }: ClientTreatmentRecordsProps
 
       const recordToSubmit = {
         ...newRecord,
-        treatments: validTreatments
+        treatments: validTreatments,
+        type: "TREATMENT"
       }
 
       const response = await fetch(`/api/clients/${clientId}/treatment-records`, {
@@ -252,7 +254,14 @@ export function ClientTreatmentRecords({ clientId }: ClientTreatmentRecordsProps
                       <TableRow key={`${record.id}-${index}`}>
                         {index === 0 && (
                           <TableCell rowSpan={record.treatments.length}>
-                            {new Date(record.date).toLocaleDateString()}
+                            {new Date(record.createdAt).toLocaleDateString("en-CA", {
+                              year: "numeric",
+                              month: "2-digit",
+                              day: "2-digit",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              second: "2-digit",
+                            })}
                           </TableCell>
                         )}
                         <TableCell>{treatment.name}</TableCell>
