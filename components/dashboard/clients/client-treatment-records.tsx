@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Plus } from "lucide-react"
+import { Plus, X } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -56,14 +56,38 @@ export function ClientTreatmentRecords({ clientId }: ClientTreatmentRecordsProps
     setNewRecord({ ...newRecord, treatments: updatedTreatments })
   }
 
+  const handleDeleteTreatment = (index: number) => {
+    // Prevent deleting the last treatment
+    if (newRecord.treatments.length <= 1) return
+
+    const updatedTreatments = newRecord.treatments.filter((_, i) => i !== index)
+    setNewRecord({ ...newRecord, treatments: updatedTreatments })
+  }
+
   const handleSubmit = async () => {
     try {
+      // Filter out treatments with empty names
+      const validTreatments = newRecord.treatments.filter(
+        treatment => treatment.name.trim() !== ''
+      )
+
+      // Validate that at least one valid treatment exists
+      if (validTreatments.length === 0) {
+        alert('Please add at least one valid treatment')
+        return
+      }
+
+      const recordToSubmit = {
+        ...newRecord,
+        treatments: validTreatments
+      }
+
       const response = await fetch(`/api/clients/${clientId}/treatment-records`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(newRecord),
+        body: JSON.stringify(recordToSubmit),
       })
 
       if (!response.ok) {
@@ -155,7 +179,7 @@ export function ClientTreatmentRecords({ clientId }: ClientTreatmentRecordsProps
               <div className="space-y-4">
                 <Label>Treatments</Label>
                 {newRecord.treatments.map((treatment, index) => (
-                  <div key={index} className="grid grid-cols-2 gap-4">
+                  <div key={index} className="grid grid-cols-[1fr_1fr_auto] items-center gap-4">
                     <div className="grid gap-2">
                       <Input
                         placeholder="Treatment name"
@@ -165,11 +189,23 @@ export function ClientTreatmentRecords({ clientId }: ClientTreatmentRecordsProps
                     </div>
                     <div className="grid gap-2">
                       <Input
-                        type="number"
+                        type="text"
                         placeholder="Price"
                         value={treatment.price}
                         onChange={(e) => handleTreatmentChange(index, 'price', e.target.value)}
                       />
+                    </div>
+                    <div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteTreatment(index)}
+                        disabled={newRecord.treatments.length <= 1}
+                        className="h-8 w-8"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                 ))}
