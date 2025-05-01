@@ -33,13 +33,14 @@ export async function POST(
 ) {
   try {
     const body = await request.json()
-    const { date, staffName, notes, treatments, type = "TREATMENT" } = body
+    const { date, staffName, notes, treatments, type = "TREATMENT", totalAmount } = body
 
-    // For FUND_ADDITION, totalAmount is positive (increasing balance)
-    // For TREATMENT, totalAmount is from treatments sum (decreasing balance)
-    const totalAmount = type === "FUND_ADDITION" 
-      ? Number(treatments[0].price)
-      : treatments.reduce((sum: number, t: { price: number }) => sum + t.price, 0)
+    if (typeof totalAmount !== "number") {
+      return NextResponse.json(
+        { error: 'Total amount is required and must be a number' },
+        { status: 400 }
+      )
+    }
 
     const treatmentRecord = await prisma.$transaction(async (tx) => {
       // Get current client balance
@@ -54,8 +55,8 @@ export async function POST(
 
       // Calculate new balance
       const newBalance = type === "FUND_ADDITION"
-        ? Number(client.balance) + Number(totalAmount)
-        : Number(client.balance) - Number(totalAmount)
+        ? Number(client.balance) + totalAmount
+        : Number(client.balance) - totalAmount
 
       // First, create the treatment record with balanceAfter
       const record = await tx.treatmentRecord.create({

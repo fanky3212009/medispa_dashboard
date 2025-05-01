@@ -61,7 +61,8 @@ export function ClientProfile({ client }: ClientProfileProps) {
           staffName: 'System', // Or could be the logged-in user's name
           notes: 'Added funds to balance',
           type: 'FUND_ADDITION',
-          treatments: [{ name: 'Fund Addition', price: Number(amount) }]
+          treatments: [{ name: 'Fund Addition', price: Number(amount) }],
+          totalAmount: Number(amount),
         }),
       })
 

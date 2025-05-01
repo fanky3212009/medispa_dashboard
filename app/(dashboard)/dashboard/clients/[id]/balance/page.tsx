@@ -78,6 +78,7 @@ export default async function BalanceHistoryPage({ params }: { params: { id: str
                     <TableHead>Amount</TableHead>
                     <TableHead>Staff</TableHead>
                     <TableHead>Balance</TableHead>
+                    <TableHead>Notes</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -112,6 +113,7 @@ export default async function BalanceHistoryPage({ params }: { params: { id: str
                         <TableCell>
                           ${Number(record.balanceAfter).toFixed(2)}
                         </TableCell>
+                        <TableCell>{record.notes || ''}</TableCell>
                       </TableRow>
                     )
                   })}

@@ -20,7 +20,8 @@ export function ClientTreatmentRecords({ clientId }: ClientTreatmentRecordsProps
     date: new Date().toISOString().split('T')[0],
     staffName: '',
     notes: '',
-    treatments: [{ name: '', price: 0 }]
+    treatments: [{ name: '', price: 0 }],
+    totalAmount: 0
   })
 
   useEffect(() => {
@@ -54,7 +55,13 @@ export function ClientTreatmentRecords({ clientId }: ClientTreatmentRecordsProps
       ...updatedTreatments[index],
       [field]: field === 'price' ? parseFloat(value) || 0 : value
     }
-    setNewRecord({ ...newRecord, treatments: updatedTreatments })
+    // Calculate new total based on treatment prices
+    const calculatedTotal = updatedTreatments.reduce((sum, t) => sum + (t.price || 0), 0)
+    setNewRecord({
+      ...newRecord,
+      treatments: updatedTreatments,
+      totalAmount: calculatedTotal
+    })
   }
 
   const handleDeleteTreatment = (index: number) => {
@@ -62,7 +69,12 @@ export function ClientTreatmentRecords({ clientId }: ClientTreatmentRecordsProps
     if (newRecord.treatments.length <= 1) return
 
     const updatedTreatments = newRecord.treatments.filter((_, i) => i !== index)
-    setNewRecord({ ...newRecord, treatments: updatedTreatments })
+    const newTotal = updatedTreatments.reduce((sum, t) => sum + (t.price || 0), 0)
+    setNewRecord({
+      ...newRecord,
+      treatments: updatedTreatments,
+      totalAmount: newTotal
+    })
   }
 
   const handleSubmit = async () => {
@@ -103,7 +115,8 @@ export function ClientTreatmentRecords({ clientId }: ClientTreatmentRecordsProps
         date: new Date().toISOString().split('T')[0],
         staffName: '',
         notes: '',
-        treatments: [{ name: '', price: 0 }]
+        treatments: [{ name: '', price: 0 }],
+        totalAmount: 0
       })
 
       // Refresh the page to update client's balance
@@ -216,13 +229,40 @@ export function ClientTreatmentRecords({ clientId }: ClientTreatmentRecordsProps
                 </Button>
               </div>
 
-              <div className="grid gap-2">
-                <Label htmlFor="notes">Notes</Label>
-                <Input
-                  id="notes"
-                  value={newRecord.notes}
-                  onChange={(e) => setNewRecord({ ...newRecord, notes: e.target.value })}
-                />
+              <div className="grid gap-4">
+                <div>
+                  <Label>Total Amount</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="text"
+                      placeholder="Total amount"
+                      value={newRecord.totalAmount}
+                      onChange={(e) => {
+                        const newTotal = parseFloat(e.target.value) || 0;
+                        const calculatedTotal = newRecord.treatments.reduce((sum, t) => sum + (t.price || 0), 0);
+                        setNewRecord({
+                          ...newRecord,
+                          totalAmount: newTotal,
+                          notes: newTotal !== calculatedTotal
+                            ? `${calculatedTotal - newTotal} by cash, ${newTotal} from balance`
+                            : newRecord.notes?.replace(/\nModified total amount:.*/, '') || ''
+                        })
+                      }}
+                    />
+                    <span className="text-sm text-muted-foreground">
+                      Suggested: ${newRecord.treatments.reduce((sum, t) => sum + (t.price || 0), 0).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="notes">Notes</Label>
+                  <Input
+                    id="notes"
+                    value={newRecord.notes}
+                    onChange={(e) => setNewRecord({ ...newRecord, notes: e.target.value })}
+                  />
+                </div>
               </div>
 
               <Button onClick={handleSubmit}>Save Record</Button>
