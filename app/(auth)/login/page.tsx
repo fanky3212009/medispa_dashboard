@@ -34,7 +34,7 @@ export default function LoginPage() {
               "This dashboard has revolutionized how we manage our medical spa. It's intuitive, comprehensive, and saves
               us hours every day."
             </p>
-            <footer className="text-sm">Sofia Davis</footer>
+            <footer className="text-sm">SkinPlus Users</footer>
           </blockquote>
         </div>
       </div>

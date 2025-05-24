@@ -21,7 +21,9 @@ export async function getClientById(id: string): Promise<SerializedClient> {
     const client = await prisma.client.findUnique({
       where: { id },
       include: {
-        appointments: true
+        appointments: true,
+        skinAssessment: true,
+        patientIntake: true,
       }
     })
     if (!client) {

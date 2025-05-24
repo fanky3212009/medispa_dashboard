@@ -37,7 +37,9 @@ export default async function ClientPage({ params }: ClientPageProps) {
         include: {
           treatments: true
         }
-      }
+      },
+      skinAssessment: true,
+      patientIntake: true
     }
   })) as ClientWithRecords | null
 

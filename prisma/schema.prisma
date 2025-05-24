@@ -45,10 +45,11 @@ model Client {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  appointments      Appointment[]
-  treatmentRecords TreatmentRecord[]
-  skinAssessment   SkinAssessment?
-  consentForms     ConsentForm[]
+  appointments         Appointment[]
+  treatmentRecords     TreatmentRecord[]
+  skinAssessment      SkinAssessment?
+  consentForms        ConsentForm[]
+  patientIntake       PatientIntake?
 }
 
 model Service {
@@ -123,6 +124,84 @@ model SkinAssessment {
   treatments   String[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  clientId String @unique
+  client   Client @relation(fields: [clientId], references: [id])
+
+  @@index([clientId])
+}
+
+model PatientIntake {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  // Skin Condition
+  skinType          String?
+  wrinkleType       String?
+  skinTone          String?
+  bloodCirculation  String?
+  skinThickness     String?
+  poreSize          String?
+  skinElasticity    String?
+
+  // Previous Aesthetic Treatments
+  laser             Boolean @default(false)
+  ipl               Boolean @default(false)
+  radiofrequency    Boolean @default(false)
+  electricalCurrent Boolean @default(false)
+  peel              Boolean @default(false)
+  hydrafacial       Boolean @default(false)
+  aestheticTreatmentDate String?
+
+  // Previous Micro-Invasive Treatments
+  hyaluronicAcid    Boolean @default(false)
+  botulinumToxin    Boolean @default(false)
+  growthFactors     Boolean @default(false)
+  lacticAcid        Boolean @default(false)
+  microInvasiveOther String?
+  microInvasiveDate String?
+  satisfactionLevel String?
+
+  // Previous Plastic Surgery
+  facelift        Boolean @default(false)
+  prosthesis      Boolean @default(false)
+  doubleEyelid    Boolean @default(false)
+  boneShaving     Boolean @default(false)
+  breastImplants  Boolean @default(false)
+  liposuction     Boolean @default(false)
+  plasticSurgeryOther String?
+  plasticSurgeryDate  String?
+
+  // Health Conditions
+  heartDisease          Boolean @default(false)
+  highBloodPressure     Boolean @default(false)
+  diabetes              Boolean @default(false)
+  pacemaker             Boolean @default(false)
+  cancer                Boolean @default(false)
+  cancerName            String?
+  cancerDate            String?
+  orthodontics          Boolean @default(false)
+  orthodonticsName      String?
+  orthodonticsDate      String?
+  immuneSystemCondition Boolean @default(false)
+  immuneSystemDetails   String?
+  surgery               Boolean @default(false)
+  surgeryName           String?
+  surgeryDate           String?
+  currentlyPregnant     Boolean @default(false)
+  sensitiveToLight      Boolean @default(false)
+  lightSensitivityDetails String?
+  substanceAllergies    Boolean @default(false)
+  allergyDetails        String?
+  longTermMedication    Boolean @default(false)
+  medicationDetails     String?
+
+  // Treatment Area Conditions
+  implants         Boolean @default(false)
+  metalStent       Boolean @default(false)
+  threadLifting    Boolean @default(false)
+  hypertrophicScar Boolean @default(false)
 
   clientId String @unique
   client   Client @relation(fields: [clientId], references: [id])
