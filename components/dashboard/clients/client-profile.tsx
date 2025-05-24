@@ -717,63 +717,93 @@ export function ClientProfile({ client }: ClientProfileProps) {
               <div>
                 <h4 className="font-medium mb-2">Skin Condition</h4>
                 <div className="grid grid-cols-2 gap-2 text-sm">
-                  <span>Type: {client.patientIntake?.skinType || patientIntake.skinType || 'Not specified'}</span>
-                  <span>Wrinkles: {client.patientIntake?.wrinkleType || patientIntake.wrinkleType || 'Not specified'}</span>
-                  <span>Tone: {client.patientIntake?.skinTone || patientIntake.skinTone || 'Not specified'}</span>
-                  <span>Circulation: {client.patientIntake?.bloodCirculation || patientIntake.bloodCirculation || 'Not specified'}</span>
-                  <span>Thickness: {client.patientIntake?.skinThickness || patientIntake.skinThickness || 'Not specified'}</span>
+                  <span>Skin Type: {client.patientIntake?.skinType || patientIntake.skinType || 'Not specified'}</span>
+                  <span>Wrinkle Type: {client.patientIntake?.wrinkleType || patientIntake.wrinkleType || 'Not specified'}</span>
+                  <span>Skin Tone: {client.patientIntake?.skinTone || patientIntake.skinTone || 'Not specified'}</span>
+                  <span>Blood Circulation: {client.patientIntake?.bloodCirculation || patientIntake.bloodCirculation || 'Not specified'}</span>
+                  <span>Skin Thickness: {client.patientIntake?.skinThickness || patientIntake.skinThickness || 'Not specified'}</span>
                   <span>Pore Size: {client.patientIntake?.poreSize || patientIntake.poreSize || 'Not specified'}</span>
-                  <span>Elasticity: {client.patientIntake?.skinElasticity || patientIntake.skinElasticity || 'Not specified'}</span>
+                  <span>Skin Elasticity: {client.patientIntake?.skinElasticity || patientIntake.skinElasticity || 'Not specified'}</span>
                 </div>
               </div>
 
               <div>
                 <h4 className="font-medium mb-2">Previous Aesthetic Treatments</h4>
                 <div className="flex flex-wrap gap-2">
-                  {(client.patientIntake?.laser || patientIntake.laser) && <span className="bg-blue-100 px-2 py-1 rounded text-xs">Laser</span>}
-                  {(client.patientIntake?.ipl || patientIntake.ipl) && <span className="bg-blue-100 px-2 py-1 rounded text-xs">IPL</span>}
-                  {(client.patientIntake?.radiofrequency || patientIntake.radiofrequency) && <span className="bg-blue-100 px-2 py-1 rounded text-xs">Radiofrequency</span>}
-                  {(client.patientIntake?.electricalCurrent || patientIntake.electricalCurrent) && <span className="bg-blue-100 px-2 py-1 rounded text-xs">Electrical Current</span>}
-                  {(client.patientIntake?.peel || patientIntake.peel) && <span className="bg-blue-100 px-2 py-1 rounded text-xs">Peel</span>}
-                  {(client.patientIntake?.hydrafacial || patientIntake.hydrafacial) && <span className="bg-blue-100 px-2 py-1 rounded text-xs">Hydrafacial</span>}
+                  {(client.patientIntake?.laser || patientIntake.laser) && <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">Laser</span>}
+                  {(client.patientIntake?.ipl || patientIntake.ipl) && <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">IPL</span>}
+                  {(client.patientIntake?.radiofrequency || patientIntake.radiofrequency) && <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">Radiofrequency</span>}
+                  {(client.patientIntake?.electricalCurrent || patientIntake.electricalCurrent) && <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">Electrical Current</span>}
+                  {(client.patientIntake?.peel || patientIntake.peel) && <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">Peel</span>}
+                  {(client.patientIntake?.hydrafacial || patientIntake.hydrafacial) && <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">Hydrafacial</span>}
                   {(client.patientIntake?.aestheticTreatmentDate || patientIntake.aestheticTreatmentDate) &&
-                    <span className="bg-gray-100 px-2 py-1 rounded text-xs">Date: {client.patientIntake?.aestheticTreatmentDate || patientIntake.aestheticTreatmentDate}</span>}
+                    <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">Date: {client.patientIntake?.aestheticTreatmentDate || patientIntake.aestheticTreatmentDate}</span>}
                 </div>
               </div>
 
               <div>
                 <h4 className="font-medium mb-2">Previous Micro-Invasive Treatments</h4>
                 <div className="flex flex-wrap gap-2">
-                  {(client.patientIntake?.hyaluronicAcid || patientIntake.hyaluronicAcid) && <span className="bg-green-100 px-2 py-1 rounded text-xs">Hyaluronic Acid</span>}
-                  {(client.patientIntake?.botulinumToxin || patientIntake.botulinumToxin) && <span className="bg-green-100 px-2 py-1 rounded text-xs">Botulinum Toxin</span>}
-                  {(client.patientIntake?.growthFactors || patientIntake.growthFactors) && <span className="bg-green-100 px-2 py-1 rounded text-xs">Growth Factors</span>}
-                  {(client.patientIntake?.lacticAcid || patientIntake.lacticAcid) && <span className="bg-green-100 px-2 py-1 rounded text-xs">Lactic Acid</span>}
+                  {(client.patientIntake?.hyaluronicAcid || patientIntake.hyaluronicAcid) && <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Hyaluronic Acid</span>}
+                  {(client.patientIntake?.botulinumToxin || patientIntake.botulinumToxin) && <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Botulinum Toxin</span>}
+                  {(client.patientIntake?.growthFactors || patientIntake.growthFactors) && <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Growth Factors</span>}
+                  {(client.patientIntake?.lacticAcid || patientIntake.lacticAcid) && <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Lactic Acid</span>}
+                  {(client.patientIntake?.microInvasiveOther || patientIntake.microInvasiveOther) && <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Other: {client.patientIntake?.microInvasiveOther || patientIntake.microInvasiveOther}</span>}
+                  {(client.patientIntake?.microInvasiveDate || patientIntake.microInvasiveDate) && <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">Date: {client.patientIntake?.microInvasiveDate || patientIntake.microInvasiveDate}</span>}
                   {(client.patientIntake?.satisfactionLevel || patientIntake.satisfactionLevel) &&
-                    <span className="bg-purple-100 px-2 py-1 rounded text-xs">Satisfaction: {client.patientIntake?.satisfactionLevel || patientIntake.satisfactionLevel}</span>}
+                    <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs">Satisfaction: {client.patientIntake?.satisfactionLevel || patientIntake.satisfactionLevel}</span>}
+                </div>
+              </div>
+
+              <div>
+                <h4 className="font-medium mb-2">Previous Plastic Surgery Treatments</h4>
+                <div className="flex flex-wrap gap-2">
+                  {(client.patientIntake?.facelift || patientIntake.facelift) && <span className="bg-indigo-100 text-indigo-800 px-2 py-1 rounded text-xs">Facelift</span>}
+                  {(client.patientIntake?.prosthesis || patientIntake.prosthesis) && <span className="bg-indigo-100 text-indigo-800 px-2 py-1 rounded text-xs">Prosthesis</span>}
+                  {(client.patientIntake?.doubleEyelid || patientIntake.doubleEyelid) && <span className="bg-indigo-100 text-indigo-800 px-2 py-1 rounded text-xs">Double Eyelid</span>}
+                  {(client.patientIntake?.boneShaving || patientIntake.boneShaving) && <span className="bg-indigo-100 text-indigo-800 px-2 py-1 rounded text-xs">Bone Shaving</span>}
+                  {(client.patientIntake?.breastImplants || patientIntake.breastImplants) && <span className="bg-indigo-100 text-indigo-800 px-2 py-1 rounded text-xs">Breast Implants</span>}
+                  {(client.patientIntake?.liposuction || patientIntake.liposuction) && <span className="bg-indigo-100 text-indigo-800 px-2 py-1 rounded text-xs">Liposuction</span>}
+                  {(client.patientIntake?.plasticSurgeryOther || patientIntake.plasticSurgeryOther) && <span className="bg-indigo-100 text-indigo-800 px-2 py-1 rounded text-xs">Other: {client.patientIntake?.plasticSurgeryOther || patientIntake.plasticSurgeryOther}</span>}
+                  {(client.patientIntake?.plasticSurgeryDate || patientIntake.plasticSurgeryDate) && <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">Date: {client.patientIntake?.plasticSurgeryDate || patientIntake.plasticSurgeryDate}</span>}
                 </div>
               </div>
 
               <div>
                 <h4 className="font-medium mb-2">Health Conditions</h4>
                 <div className="flex flex-wrap gap-2">
-                  {(client.patientIntake?.heartDisease || patientIntake.heartDisease) && <span className="bg-red-100 px-2 py-1 rounded text-xs">Heart Disease</span>}
-                  {(client.patientIntake?.highBloodPressure || patientIntake.highBloodPressure) && <span className="bg-red-100 px-2 py-1 rounded text-xs">High Blood Pressure</span>}
-                  {(client.patientIntake?.diabetes || patientIntake.diabetes) && <span className="bg-red-100 px-2 py-1 rounded text-xs">Diabetes</span>}
-                  {(client.patientIntake?.pacemaker || patientIntake.pacemaker) && <span className="bg-red-100 px-2 py-1 rounded text-xs">Pacemaker</span>}
-                  {(client.patientIntake?.cancer || patientIntake.cancer) && <span className="bg-red-100 px-2 py-1 rounded text-xs">Cancer</span>}
-                  {(client.patientIntake?.currentlyPregnant || patientIntake.currentlyPregnant) && <span className="bg-yellow-100 px-2 py-1 rounded text-xs">Pregnant</span>}
-                  {(client.patientIntake?.sensitiveToLight || patientIntake.sensitiveToLight) && <span className="bg-orange-100 px-2 py-1 rounded text-xs">Light Sensitive</span>}
-                  {(client.patientIntake?.substanceAllergies || patientIntake.substanceAllergies) && <span className="bg-orange-100 px-2 py-1 rounded text-xs">Allergies</span>}
+                  {(client.patientIntake?.heartDisease || patientIntake.heartDisease) && <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-xs">Heart Disease</span>}
+                  {(client.patientIntake?.highBloodPressure || patientIntake.highBloodPressure) && <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-xs">High Blood Pressure</span>}
+                  {(client.patientIntake?.diabetes || patientIntake.diabetes) && <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-xs">Diabetes</span>}
+                  {(client.patientIntake?.pacemaker || patientIntake.pacemaker) && <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-xs">Pacemaker</span>}
+                  {(client.patientIntake?.cancer || patientIntake.cancer) && <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-xs">Cancer</span>}
+                  {(client.patientIntake?.cancerName || patientIntake.cancerName) && <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-xs">Cancer: {client.patientIntake?.cancerName || patientIntake.cancerName}</span>}
+                  {(client.patientIntake?.cancerDate || patientIntake.cancerDate) && <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-xs">Cancer Date: {client.patientIntake?.cancerDate || patientIntake.cancerDate}</span>}
+                  {(client.patientIntake?.orthodontics || patientIntake.orthodontics) && <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">Orthodontics</span>}
+                  {(client.patientIntake?.orthodonticsName || patientIntake.orthodonticsName) && <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">Orthodontics: {client.patientIntake?.orthodonticsName || patientIntake.orthodonticsName}</span>}
+                  {(client.patientIntake?.orthodonticsDate || patientIntake.orthodonticsDate) && <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">Orthodontics Date: {client.patientIntake?.orthodonticsDate || patientIntake.orthodonticsDate}</span>}
+                  {(client.patientIntake?.immuneSystemCondition || patientIntake.immuneSystemCondition) && <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs">Immune System Condition</span>}
+                  {(client.patientIntake?.immuneSystemDetails || patientIntake.immuneSystemDetails) && <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs">Immune Details: {client.patientIntake?.immuneSystemDetails || patientIntake.immuneSystemDetails}</span>}
+                  {(client.patientIntake?.surgery || patientIntake.surgery) && <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs">Surgery</span>}
+                  {(client.patientIntake?.surgeryName || patientIntake.surgeryName) && <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs">Surgery: {client.patientIntake?.surgeryName || patientIntake.surgeryName}</span>}
+                  {(client.patientIntake?.surgeryDate || patientIntake.surgeryDate) && <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs">Surgery Date: {client.patientIntake?.surgeryDate || patientIntake.surgeryDate}</span>}
+                  {(client.patientIntake?.currentlyPregnant || patientIntake.currentlyPregnant) && <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs">Pregnant</span>}
+                  {(client.patientIntake?.sensitiveToLight || patientIntake.sensitiveToLight) && <span className="bg-amber-100 text-amber-800 px-2 py-1 rounded text-xs">Light Sensitive</span>}
+                  {(client.patientIntake?.lightSensitivityDetails || patientIntake.lightSensitivityDetails) && <span className="bg-amber-100 text-amber-800 px-2 py-1 rounded text-xs">Light Details: {client.patientIntake?.lightSensitivityDetails || patientIntake.lightSensitivityDetails}</span>}
+                  {(client.patientIntake?.substanceAllergies || patientIntake.substanceAllergies) && <span className="bg-pink-100 text-pink-800 px-2 py-1 rounded text-xs">Allergies</span>}
+                  {(client.patientIntake?.allergyDetails || patientIntake.allergyDetails) && <span className="bg-pink-100 text-pink-800 px-2 py-1 rounded text-xs">Allergy Details: {client.patientIntake?.allergyDetails || patientIntake.allergyDetails}</span>}
+                  {(client.patientIntake?.longTermMedication || patientIntake.longTermMedication) && <span className="bg-teal-100 text-teal-800 px-2 py-1 rounded text-xs">Long Term Medication</span>}
+                  {(client.patientIntake?.medicationDetails || patientIntake.medicationDetails) && <span className="bg-teal-100 text-teal-800 px-2 py-1 rounded text-xs">Medication: {client.patientIntake?.medicationDetails || patientIntake.medicationDetails}</span>}
                 </div>
               </div>
 
               <div>
                 <h4 className="font-medium mb-2">Treatment Area Conditions</h4>
                 <div className="flex flex-wrap gap-2">
-                  {(client.patientIntake?.implants || patientIntake.implants) && <span className="bg-gray-100 px-2 py-1 rounded text-xs">Implants</span>}
-                  {(client.patientIntake?.metalStent || patientIntake.metalStent) && <span className="bg-gray-100 px-2 py-1 rounded text-xs">Metal Stent</span>}
-                  {(client.patientIntake?.threadLifting || patientIntake.threadLifting) && <span className="bg-gray-100 px-2 py-1 rounded text-xs">Thread Lifting</span>}
-                  {(client.patientIntake?.hypertrophicScar || patientIntake.hypertrophicScar) && <span className="bg-gray-100 px-2 py-1 rounded text-xs">Hypertrophic Scar</span>}
+                  {(client.patientIntake?.implants || patientIntake.implants) && <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">Implants</span>}
+                  {(client.patientIntake?.metalStent || patientIntake.metalStent) && <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">Metal Stent</span>}
+                  {(client.patientIntake?.threadLifting || patientIntake.threadLifting) && <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">Thread Lifting</span>}
+                  {(client.patientIntake?.hypertrophicScar || patientIntake.hypertrophicScar) && <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">Hypertrophic Scar</span>}
                 </div>
               </div>
             </div>
