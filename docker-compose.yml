@@ -1,0 +1,113 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: medispa-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: medispa
+      POSTGRES_PASSWORD: medispa_dev_password
+      POSTGRES_DB: medispa_dashboard
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./prisma/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - medispa-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U medispa -d medispa_dashboard"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Next.js Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: medispa-app
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://medispa:medispa_dev_password@postgres:5432/medispa_dashboard
+      - DIRECT_URL=postgresql://medispa:medispa_dev_password@postgres:5432/medispa_dashboard
+      - NEXTAUTH_SECRET=your-development-secret-key-here
+      - NEXTAUTH_URL=http://localhost:3000
+      - NEXT_TELEMETRY_DISABLED=1
+    ports:
+      - "3000:3000"
+    volumes:
+      # Mount source code for hot reload
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - medispa-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: >
+      sh -c "
+        echo 'Waiting for database to be ready...' &&
+        npx prisma generate &&
+        npx prisma db push &&
+        echo 'Database setup complete!' &&
+        pnpm dev
+      "
+
+  # Redis (Optional - for session storage/caching)
+  redis:
+    image: redis:7-alpine
+    container_name: medispa-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - medispa-network
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Prisma Studio (Optional - Database GUI)
+  prisma-studio:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: medispa-prisma-studio
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgresql://medispa:medispa_dev_password@postgres:5432/medispa_dashboard
+    ports:
+      - "5555:5555"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    networks:
+      - medispa-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: npx prisma studio --port 5555 --hostname 0.0.0.0
+    profiles:
+      - tools
+
+networks:
+  medispa-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
