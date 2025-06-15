@@ -144,9 +144,10 @@ docs/
 .travis.yml
 .circleci/
 
-# Prisma development files
+# Prisma development files (but keep schema.prisma)
 prisma/migrations/
 prisma/seed.ts
+!prisma/schema.prisma
 
 # Public assets (they should be included, so commenting out)
 # public/

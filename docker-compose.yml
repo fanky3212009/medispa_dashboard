@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # PostgreSQL Database
   postgres:
@@ -15,7 +13,6 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./prisma/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
       - medispa-network
     healthcheck:
@@ -45,7 +42,6 @@ services:
       # Mount source code for hot reload
       - .:/app
       - /app/node_modules
-      - /app/.next
     networks:
       - medispa-network
     depends_on:

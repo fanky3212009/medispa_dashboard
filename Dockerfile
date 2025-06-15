@@ -50,19 +50,23 @@ RUN apk add --no-cache curl
 COPY package.json pnpm-lock.yaml ./
 
 # Install dependencies including dev dependencies
-RUN pnpm install
+RUN pnpm install --ignore-scripts
 
-# Copy source code
-COPY . .
+# Copy prisma schema first
+COPY ./prisma/schema.prisma ./prisma/
 
 # Generate Prisma client
 RUN npx prisma generate
+
+# Copy source code
+COPY . .
 
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Change ownership of the app directory
+# Create .next directory and set ownership
+RUN mkdir -p /app/.next && chown -R nextjs:nodejs /app
 USER nextjs
 
 # Expose port
