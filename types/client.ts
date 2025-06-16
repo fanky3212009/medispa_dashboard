@@ -10,7 +10,7 @@ export interface SerializedClient extends Omit<Client, 'balance' | 'treatmentRec
 export interface Client {
   id: string
   name: string
-  email: string
+  email: string | null
   phone: string | null
   dob?: Date | null
   gender?: string | null
@@ -43,13 +43,13 @@ export interface PatientIntake {
   updatedAt: string
   
   // Skin Condition
-  skinType?: string
-  wrinkleType?: string
-  skinTone?: string
-  bloodCirculation?: string
-  skinThickness?: string
-  poreSize?: string
-  skinElasticity?: string
+  skinType: string | null
+  wrinkleType: string | null
+  skinTone: string | null
+  bloodCirculation: string | null
+  skinThickness: string | null
+  poreSize: string | null
+  skinElasticity: string | null
 
   // Previous Aesthetic Treatments
   laser: boolean
@@ -58,16 +58,16 @@ export interface PatientIntake {
   electricalCurrent: boolean
   peel: boolean
   hydrafacial: boolean
-  aestheticTreatmentDate?: string
+  aestheticTreatmentDate: string | null
 
   // Previous Micro-Invasive Treatments
   hyaluronicAcid: boolean
   botulinumToxin: boolean
   growthFactors: boolean
   lacticAcid: boolean
-  microInvasiveOther?: string
-  microInvasiveDate?: string
-  satisfactionLevel?: string
+  microInvasiveOther: string | null
+  microInvasiveDate: string | null
+  satisfactionLevel: string | null
 
   // Previous Plastic Surgery
   facelift: boolean
@@ -76,8 +76,8 @@ export interface PatientIntake {
   boneShaving: boolean
   breastImplants: boolean
   liposuction: boolean
-  plasticSurgeryOther?: string
-  plasticSurgeryDate?: string
+  plasticSurgeryOther: string | null
+  plasticSurgeryDate: string | null
 
   // Health Conditions
   heartDisease: boolean
@@ -85,23 +85,23 @@ export interface PatientIntake {
   diabetes: boolean
   pacemaker: boolean
   cancer: boolean
-  cancerName?: string
-  cancerDate?: string
+  cancerName: string | null
+  cancerDate: string | null
   orthodontics: boolean
-  orthodonticsName?: string
-  orthodonticsDate?: string
+  orthodonticsName: string | null
+  orthodonticsDate: string | null
   immuneSystemCondition: boolean
-  immuneSystemDetails?: string
+  immuneSystemDetails: string | null
   surgery: boolean
-  surgeryName?: string
-  surgeryDate?: string
+  surgeryName: string | null
+  surgeryDate: string | null
   currentlyPregnant: boolean
   sensitiveToLight: boolean
-  lightSensitivityDetails?: string
+  lightSensitivityDetails: string | null
   substanceAllergies: boolean
-  allergyDetails?: string
+  allergyDetails: string | null
   longTermMedication: boolean
-  medicationDetails?: string
+  medicationDetails: string | null
 
   // Treatment Area Conditions
   implants: boolean
