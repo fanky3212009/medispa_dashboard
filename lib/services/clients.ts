@@ -31,7 +31,12 @@ export async function getClientById(id: string): Promise<SerializedClient> {
     }
     const serializedClient = {
       ...client,
-      balance: client.balance.toString()
+      balance: client.balance.toString(),
+      patientIntake: client.patientIntake ? {
+        ...client.patientIntake,
+        createdAt: client.patientIntake.createdAt.toISOString(),
+        updatedAt: client.patientIntake.updatedAt.toISOString()
+      } : null
     }
     return serializedClient
   } catch (error) {
@@ -42,7 +47,7 @@ export async function getClientById(id: string): Promise<SerializedClient> {
 
 export async function createClient(data: {
   name: string
-  email: string
+  email?: string
   phone?: string
   dob?: Date
   gender?: string

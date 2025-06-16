@@ -25,8 +25,15 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
+    
+    // Handle empty email by converting to null
+    const processedData = {
+      ...body,
+      email: body.email && body.email.trim() !== "" ? body.email : null
+    }
+    
     const client = await prisma.client.create({
-      data: body
+      data: processedData
     })
     const serializedClient = {
       ...client,

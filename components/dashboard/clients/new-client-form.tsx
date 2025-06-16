@@ -26,7 +26,7 @@ const formSchema = z.object({
   }),
   email: z.string().email({
     message: "Please enter a valid email address.",
-  }),
+  }).optional().or(z.literal("")),
   phone: z.string().min(10, {
     message: "Phone number must be at least 10 digits.",
   }),
@@ -178,7 +178,7 @@ export function NewClientForm() {
       // Create client with basic info
       const clientData = {
         name: values.name,
-        email: values.email,
+        email: values.email && values.email.trim() !== "" ? values.email : null,
         phone: values.phone,
         dob: values.dob,
         gender: values.gender,
@@ -313,7 +313,7 @@ export function NewClientForm() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>Email (Optional)</FormLabel>
                     <FormControl>
                       <Input placeholder="john@example.com" {...field} />
                     </FormControl>
