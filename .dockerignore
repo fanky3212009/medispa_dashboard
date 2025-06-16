@@ -113,7 +113,10 @@ Thumbs.db
 README.md
 
 # Docker
-Dockerfile*
+Dockerfile.backup
+!Dockerfile
+!Dockerfile.prod
+!Dockerfile.dev
 docker-compose*
 .dockerignore
 
