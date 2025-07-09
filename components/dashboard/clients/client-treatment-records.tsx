@@ -294,13 +294,8 @@ export function ClientTreatmentRecords({ clientId }: ClientTreatmentRecordsProps
                       <TableRow key={`${record.id}-${index}`}>
                         {index === 0 && (
                           <TableCell rowSpan={record.treatments.length}>
-                            {new Date(record.createdAt).toLocaleDateString("en-CA", {
-                              year: "numeric",
-                              month: "2-digit",
-                              day: "2-digit",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                              second: "2-digit",
+                            {new Date(record.date).toLocaleDateString("en-CA", {
+                              timeZone: "UTC"
                             })}
                           </TableCell>
                         )}
