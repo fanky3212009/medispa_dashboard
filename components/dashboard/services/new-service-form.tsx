@@ -54,6 +54,7 @@ export function NewServiceForm() {
   const router = useRouter()
   const { toast } = useToast()
   const [variants, setVariants] = useState<ServiceVariant[]>([{ name: "", duration: 60, price: 0 }])
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -65,17 +66,41 @@ export function NewServiceForm() {
     },
   })
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values)
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsSubmitting(true)
+    try {
+      const response = await fetch('/api/services', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(values),
+      })
 
-    // In a real app, you would call your API to create the service
-    toast({
-      title: "Service created",
-      description: `${values.name} has been added to your service menu.`,
-    })
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to create service')
+      }
 
-    // Redirect to the services list
-    router.push("/dashboard/services")
+      const service = await response.json()
+
+      toast({
+        title: "Service created",
+        description: `${service.name} has been added to your service menu.`,
+      })
+
+      // Redirect to the services list
+      router.push("/dashboard/services")
+    } catch (error) {
+      console.error('Error creating service:', error)
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : 'Failed to create service',
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const addVariant = () => {
@@ -96,10 +121,22 @@ export function NewServiceForm() {
 
   const updateVariant = (index: number, field: keyof ServiceVariant, value: string | number) => {
     const newVariants = [...variants]
-    newVariants[index] = {
-      ...newVariants[index],
-      [field]: value,
+
+    // Handle number fields properly to avoid NaN
+    if (field === 'duration' || field === 'price') {
+      const numValue = typeof value === 'string' ? (field === 'duration' ? parseInt(value, 10) : parseFloat(value)) : value
+      newVariants[index] = {
+        ...newVariants[index],
+        [field]: isNaN(numValue) ? 0 : numValue,
+      }
+    } else {
+      // For string fields like 'name', ensure value is a string
+      newVariants[index] = {
+        ...newVariants[index],
+        [field]: typeof value === 'string' ? value : String(value),
+      }
     }
+
     setVariants(newVariants)
     form.setValue("variants", newVariants)
   }
@@ -260,13 +297,14 @@ export function NewServiceForm() {
         </Card>
 
         <div className="flex justify-end gap-4">
-          <Button type="button" variant="outline" onClick={() => router.back()}>
+          <Button type="button" variant="outline" onClick={() => router.back()} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button type="submit">Create Service</Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Creating..." : "Create Service"}
+          </Button>
         </div>
       </form>
     </Form>
   )
 }
-

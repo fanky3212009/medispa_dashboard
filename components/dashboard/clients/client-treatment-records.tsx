@@ -9,6 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { ServiceAutocomplete } from "@/components/ui/service-autocomplete"
+import { Switch } from "@/components/ui/switch"
 import type { Treatment, TreatmentRecord, ClientTreatmentRecordsProps } from "@/types/treatment"
 
 export function ClientTreatmentRecords({ clientId }: ClientTreatmentRecordsProps) {
@@ -20,9 +22,10 @@ export function ClientTreatmentRecords({ clientId }: ClientTreatmentRecordsProps
     date: new Date().toISOString().split('T')[0],
     staffName: '',
     notes: '',
-    treatments: [{ name: '', price: 0 }],
+    treatments: [{ name: '', price: 0, serviceVariantId: '' }],
     totalAmount: 0
   })
+  const [useServiceAutocomplete, setUseServiceAutocomplete] = useState(true)
 
   useEffect(() => {
     async function fetchTreatmentRecords() {
@@ -45,7 +48,7 @@ export function ClientTreatmentRecords({ clientId }: ClientTreatmentRecordsProps
   const handleAddTreatment = () => {
     setNewRecord({
       ...newRecord,
-      treatments: [...newRecord.treatments, { name: '', price: 0 }]
+      treatments: [...newRecord.treatments, { name: '', price: 0, serviceVariantId: '' }]
     })
   }
 
@@ -115,7 +118,7 @@ export function ClientTreatmentRecords({ clientId }: ClientTreatmentRecordsProps
         date: new Date().toISOString().split('T')[0],
         staffName: '',
         notes: '',
-        treatments: [{ name: '', price: 0 }],
+        treatments: [{ name: '', price: 0, serviceVariantId: '' }],
         totalAmount: 0
       })
 
@@ -192,15 +195,47 @@ export function ClientTreatmentRecords({ clientId }: ClientTreatmentRecordsProps
               </div>
 
               <div className="space-y-4">
-                <Label>Treatments</Label>
+                <div className="flex items-center justify-between">
+                  <Label>Treatments</Label>
+                  <div className="flex items-center space-x-2">
+                    <Label htmlFor="use-autocomplete" className="text-sm">Use service autocomplete</Label>
+                    <Switch
+                      id="use-autocomplete"
+                      checked={useServiceAutocomplete}
+                      onCheckedChange={setUseServiceAutocomplete}
+                    />
+                  </div>
+                </div>
                 {newRecord.treatments.map((treatment, index) => (
                   <div key={index} className="grid grid-cols-[1fr_1fr_auto] items-center gap-4">
                     <div className="grid gap-2">
-                      <Input
-                        placeholder="Treatment name"
-                        value={treatment.name}
-                        onChange={(e) => handleTreatmentChange(index, 'name', e.target.value)}
-                      />
+                      {useServiceAutocomplete ? (
+                        <ServiceAutocomplete
+                          value={treatment.serviceVariantId}
+                          onSelect={(option) => {
+                            const updatedTreatments = [...newRecord.treatments]
+                            updatedTreatments[index] = {
+                              ...updatedTreatments[index],
+                              name: option ? option.label : '',
+                              price: option ? option.price : 0,
+                              serviceVariantId: option ? option.value : ''
+                            }
+                            const calculatedTotal = updatedTreatments.reduce((sum, t) => sum + (t.price || 0), 0)
+                            setNewRecord({
+                              ...newRecord,
+                              treatments: updatedTreatments,
+                              totalAmount: calculatedTotal
+                            })
+                          }}
+                          placeholder="Select a service..."
+                        />
+                      ) : (
+                        <Input
+                          placeholder="Treatment name"
+                          value={treatment.name}
+                          onChange={(e) => handleTreatmentChange(index, 'name', e.target.value)}
+                        />
+                      )}
                     </div>
                     <div className="grid gap-2">
                       <Input
@@ -208,6 +243,7 @@ export function ClientTreatmentRecords({ clientId }: ClientTreatmentRecordsProps
                         placeholder="Price"
                         value={treatment.price}
                         onChange={(e) => handleTreatmentChange(index, 'price', e.target.value)}
+                        disabled={useServiceAutocomplete && !!treatment.serviceVariantId}
                       />
                     </div>
                     <div>
