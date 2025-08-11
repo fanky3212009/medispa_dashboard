@@ -30,15 +30,28 @@ async function main() {
     },
   })
 
-  // Create services
+  // Create services with variants
   const facial = await prisma.service.upsert({
     where: { name: 'Facial Treatment' },
     update: {},
     create: {
       name: 'Facial Treatment',
       description: 'Rejuvenating facial treatment for all skin types',
-      duration: 60,
-      price: 89.99,
+      category: 'facial',
+      variants: {
+        create: [
+          {
+            name: 'Standard Facial',
+            duration: 60,
+            price: 89.99,
+          },
+          {
+            name: 'First Trial',
+            duration: 60,
+            price: 59.99,
+          },
+        ],
+      },
     },
   })
 
@@ -48,8 +61,16 @@ async function main() {
     create: {
       name: 'Therapeutic Massage',
       description: 'Full body massage therapy',
-      duration: 90,
-      price: 129.99,
+      category: 'other',
+      variants: {
+        create: [
+          {
+            name: 'Full Body Massage',
+            duration: 90,
+            price: 129.99,
+          },
+        ],
+      },
     },
   })
 
@@ -85,6 +106,8 @@ async function main() {
             date: new Date('2024-03-15'),
             staffName: 'Dr. Sarah',
             totalAmount: 628.00,
+            balanceAfter: 250.00,
+            type: 'TREATMENT',
             notes: '500 credits, $128 paid',
             treatments: {
               create: [
@@ -97,6 +120,8 @@ async function main() {
             date: new Date('2024-02-15'),
             staffName: 'Dr. Sarah',
             totalAmount: 500.00,
+            balanceAfter: 750.00,
+            type: 'TREATMENT',
             notes: '$500 paid',
             treatments: {
               create: [
@@ -141,6 +166,8 @@ async function main() {
             date: new Date('2024-03-20'),
             staffName: 'Dr. Michael',
             totalAmount: 660.00,
+            balanceAfter: 0.00,
+            type: 'TREATMENT',
             notes: '$660 paid',
             treatments: {
               create: [
@@ -196,4 +223,4 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect()
-  }) 
+  })

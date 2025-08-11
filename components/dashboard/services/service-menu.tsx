@@ -1,52 +1,86 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ArrowLeft, Filter, MoreVertical, Plus, Search, Smile, Tag } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@/components/ui/skeleton"
 
-// Mock data for service categories
-const categories = [
-  { id: "all", name: "All categories", count: 42 },
-  { id: "facial", name: "Facial", count: 7 },
-  { id: "eyebrow", name: "紋眉/嘴", count: 0 },
-]
+type ServiceVariant = {
+  id: string
+  name: string
+  duration: number
+  price: number
+}
 
-// Mock data for services
-const services = [
-  {
-    id: "1",
-    name: "SYNA韓國無創氣墊針",
-    category: "facial",
-    variants: [
-      { id: "1-1", name: "SYNA韓國無創氣墊針", duration: "1h", price: "CA$ 380" },
-      { id: "1-2", name: "Frist trial", duration: "1h", price: "CA$ 188" },
-    ],
-  },
-  {
-    id: "2",
-    name: "DEP無針滲透水光",
-    category: "facial",
-    variants: [
-      { id: "2-1", name: "DEP無針滲透水光", duration: "1h", price: "CA$ 380" },
-      { id: "2-2", name: "Frist trial", duration: "1h", price: "CA$ 188" },
-    ],
-  },
-  {
-    id: "3",
-    name: "Visia 皮膚檢測",
-    category: "facial",
-    variants: [],
-  },
-]
+type Service = {
+  id: string
+  name: string
+  description?: string
+  category: string
+  isActive: boolean
+  variants: ServiceVariant[]
+}
+
+type Category = {
+  id: string
+  name: string
+  count: number
+}
 
 export function ServiceMenu() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("all")
+  const [services, setServices] = useState<Service[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
+
+  useEffect(() => {
+    async function fetchServices() {
+      try {
+        setLoading(true)
+        const response = await fetch('/api/services')
+        if (!response.ok) throw new Error('Failed to fetch services')
+        const data: Service[] = await response.json()
+        setServices(data)
+
+        // Calculate categories with counts
+        const categoryMap = new Map<string, number>()
+        let totalCount = 0
+
+        data.forEach(service => {
+          if (service.isActive) {
+            totalCount++
+            const count = categoryMap.get(service.category) || 0
+            categoryMap.set(service.category, count + 1)
+          }
+        })
+
+        const calculatedCategories: Category[] = [
+          { id: "all", name: "All categories", count: totalCount },
+          { id: "facial", name: "Facial", count: categoryMap.get("facial") || 0 },
+          { id: "laser", name: "Laser", count: categoryMap.get("laser") || 0 },
+          { id: "injection", name: "Injection", count: categoryMap.get("injection") || 0 },
+          { id: "skincare", name: "Skincare", count: categoryMap.get("skincare") || 0 },
+          { id: "other", name: "Other", count: categoryMap.get("other") || 0 },
+        ]
+
+        setCategories(calculatedCategories)
+      } catch (error) {
+        console.error('Error fetching services:', error)
+        setError('Failed to load services')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchServices()
+  }, [])
 
   const handleAddService = () => {
     router.push("/dashboard/services/new")
@@ -58,6 +92,7 @@ export function ServiceMenu() {
 
   const filteredServices = services.filter(
     (service) =>
+      service.isActive &&
       (selectedCategory === "all" || service.category === selectedCategory) &&
       service.name.toLowerCase().includes(searchQuery.toLowerCase()),
   )
@@ -119,30 +154,62 @@ export function ServiceMenu() {
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        {filteredServices.map((service) => (
-          <div key={service.id} className="p-4 border-b">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-xl font-bold">{service.name}</h3>
-              <Button variant="ghost" size="icon">
-                <MoreVertical className="h-5 w-5" />
-              </Button>
-            </div>
-
-            {service.variants.map((variant, index) => (
-              <div key={variant.id} className="mb-2 pl-2 border-l-4 border-teal-400">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p>
-                      {variant.name} • {variant.duration}
-                    </p>
-                    {index === 1 && <p>Frist trial • {variant.duration}</p>}
-                  </div>
-                  <p className="font-semibold">{variant.price}</p>
-                </div>
+        {loading ? (
+          <div className="p-4 space-y-4">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div key={index} className="p-4 border-b">
+                <Skeleton className="h-6 w-48 mb-2" />
+                <Skeleton className="h-4 w-32 mb-1" />
+                <Skeleton className="h-4 w-24" />
               </div>
             ))}
           </div>
-        ))}
+        ) : error ? (
+          <div className="flex items-center justify-center h-64">
+            <p className="text-red-500">{error}</p>
+          </div>
+        ) : filteredServices.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-64">
+            <h3 className="text-lg font-semibold mb-2">No services found</h3>
+            <p className="text-muted-foreground mb-4">
+              {searchQuery || selectedCategory !== "all"
+                ? "Try adjusting your search or filter criteria."
+                : "Get started by adding your first service."}
+            </p>
+            <Button onClick={handleAddService}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Service
+            </Button>
+          </div>
+        ) : (
+          filteredServices.map((service) => (
+            <div key={service.id} className="p-4 border-b">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-xl font-bold">{service.name}</h3>
+                <Button variant="ghost" size="icon">
+                  <MoreVertical className="h-5 w-5" />
+                </Button>
+              </div>
+
+              {service.variants.map((variant) => (
+                <div key={variant.id} className="mb-2 pl-2 border-l-4 border-teal-400">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p>
+                        {variant.name} • {variant.duration}min
+                      </p>
+                    </div>
+                    <p className="font-semibold">CA$ {Number(variant.price).toFixed(2)}</p>
+                  </div>
+                </div>
+              ))}
+
+              {service.variants.length === 0 && (
+                <p className="text-muted-foreground text-sm">No variants configured</p>
+              )}
+            </div>
+          ))
+        )}
       </div>
 
       <div className="flex justify-around p-4 border-t bg-white">
@@ -176,4 +243,3 @@ export function ServiceMenu() {
     </div>
   )
 }
-
