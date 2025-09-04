@@ -4,7 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Calendar, ClipboardList, LayoutDashboard, Settings, Users } from "lucide-react"
+import { Calendar, ClipboardList, LayoutDashboard, Settings, Users, Package } from "lucide-react"
 
 interface NavProps {
   className?: string
@@ -40,6 +40,11 @@ export function DashboardNav({ className }: NavProps) {
       icon: ClipboardList,
     },
     {
+      title: "Packages",
+      href: "/dashboard/packages",
+      icon: Package,
+    },
+    {
       title: "Settings",
       href: "/dashboard/settings",
       icon: Settings,
@@ -66,4 +71,3 @@ export function DashboardNav({ className }: NavProps) {
     </nav>
   )
 }
-

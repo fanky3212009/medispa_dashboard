@@ -33,7 +33,7 @@ export async function POST(
 ) {
   try {
     const body = await request.json()
-    const { date, staffName, notes, treatments, type = "TREATMENT", totalAmount } = body
+    const { date, staffName, notes, treatments, type = "TREATMENT", totalAmount, usePackages = true } = body
 
     if (typeof totalAmount !== "number") {
       return NextResponse.json(
@@ -53,26 +53,89 @@ export async function POST(
         throw new Error("Client not found")
       }
 
-      // Calculate new balance
-      const newBalance = type === "FUND_ADDITION"
-        ? Number(client.balance) + totalAmount
-        : Number(client.balance) - totalAmount
+      let actualAmountCharged = totalAmount
+      const treatmentsWithPackages: any[] = []
 
-      // First, create the treatment record with balanceAfter
+      // For treatment records, check for applicable packages
+      if (type === "TREATMENT" && usePackages) {
+        for (const treatment of treatments) {
+          let clientPackageId = null
+          let treatmentPrice = treatment.price
+
+          // Try to find applicable package for this treatment
+          if (treatment.serviceVariantId) {
+            // Get service info for this variant
+            const serviceVariant = await tx.serviceVariant.findUnique({
+              where: { id: treatment.serviceVariantId },
+              include: { service: true }
+            })
+
+            if (serviceVariant) {
+              // Find earliest expiring active package for this service
+              const applicablePackage = await tx.clientPackage.findFirst({
+                where: {
+                  clientId: params.id,
+                  package: {
+                    serviceId: serviceVariant.serviceId
+                  },
+                  isActive: true,
+                  sessionsRemaining: { gt: 0 },
+                  expiryDate: { gt: new Date() }
+                },
+                orderBy: { expiryDate: 'asc' },
+                include: { package: true }
+              })
+
+              if (applicablePackage) {
+                // Use package session - deduct from total amount
+                actualAmountCharged -= treatmentPrice
+                clientPackageId = applicablePackage.id
+
+                // Decrement package sessions
+                await tx.clientPackage.update({
+                  where: { id: applicablePackage.id },
+                  data: {
+                    sessionsRemaining: applicablePackage.sessionsRemaining - 1
+                  }
+                })
+              }
+            }
+          }
+
+          treatmentsWithPackages.push({
+            name: treatment.name,
+            price: treatmentPrice,
+            clientPackageId
+          })
+        }
+      } else {
+        // No package logic, use treatments as-is
+        treatmentsWithPackages.push(...treatments.map((t: any) => ({
+          name: t.name,
+          price: t.price,
+          clientPackageId: null
+        })))
+      }
+
+      // Calculate new balance based on actual amount charged
+      const newBalance = type === "FUND_ADDITION"
+        ? Number(client.balance) + actualAmountCharged
+        : Number(client.balance) - actualAmountCharged
+
+      // Create the treatment record with balanceAfter
       const record = await tx.treatmentRecord.create({
         data: {
           date: new Date(date),
           staffName,
-          notes,
+          notes: type === "TREATMENT" && actualAmountCharged !== totalAmount 
+            ? `${notes || ''} (${totalAmount - actualAmountCharged} covered by package)`.trim()
+            : notes,
           type,
-          totalAmount,
+          totalAmount: actualAmountCharged,
           balanceAfter: newBalance,
           clientId: params.id,
           treatments: type === "TREATMENT" ? {
-            create: treatments.map((t: { name: string; price: number }) => ({
-              name: t.name,
-              price: t.price
-            }))
+            create: treatmentsWithPackages
           } : undefined
         },
         include: {

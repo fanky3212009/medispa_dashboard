@@ -50,6 +50,7 @@ model Client {
   skinAssessment      SkinAssessment?
   consentForms        ConsentForm[]
   patientIntake       PatientIntake?
+  clientPackages      ClientPackage[]
 }
 
 model Service {
@@ -63,6 +64,7 @@ model Service {
 
   variants     ServiceVariant[]
   appointments Appointment[]
+  packages     Package[]
 
   @@index([category])
   @@index([isActive])
@@ -127,11 +129,14 @@ model Treatment {
   id     String @id @default(cuid())
   name   String
   price  Decimal @db.Decimal(10, 2)
+  clientPackageId String?
 
   treatmentRecordId String
   treatmentRecord   TreatmentRecord @relation(fields: [treatmentRecordId], references: [id])
+  clientPackage     ClientPackage? @relation(fields: [clientPackageId], references: [id])
 
   @@index([treatmentRecordId])
+  @@index([clientPackageId])
 }
 
 model SkinAssessment {
@@ -225,6 +230,44 @@ model PatientIntake {
   client   Client @relation(fields: [clientId], references: [id])
 
   @@index([clientId])
+}
+
+model Package {
+  id          String   @id @default(cuid())
+  name        String
+  serviceId   String
+  service     Service  @relation(fields: [serviceId], references: [id])
+  totalSessions Int
+  price       Decimal  @db.Decimal(10, 2)
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  clientPackages ClientPackage[]
+
+  @@index([serviceId])
+  @@index([isActive])
+}
+
+model ClientPackage {
+  id               String   @id @default(cuid())
+  clientId         String
+  client           Client   @relation(fields: [clientId], references: [id])
+  packageId        String
+  package          Package  @relation(fields: [packageId], references: [id])
+  sessionsRemaining Int
+  purchaseDate     DateTime @default(now())
+  expiryDate       DateTime
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  treatments Treatment[]
+
+  @@index([clientId])
+  @@index([packageId])
+  @@index([isActive])
 }
 
 enum Role {

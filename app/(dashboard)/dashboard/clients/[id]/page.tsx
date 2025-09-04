@@ -4,6 +4,7 @@ import prisma from "@/lib/db"
 import { ClientProfile } from "@/components/dashboard/clients/client-profile"
 import { ClientTreatmentRecords } from "@/components/dashboard/clients/client-treatment-records"
 import { ClientForms } from "@/components/dashboard/clients/client-forms"
+import { ClientPackages } from "@/components/dashboard/clients/client-packages"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { Client, SerializedClient } from "@/types/client"
 import type { SerializedTreatmentRecord, Treatment, TreatmentRecord } from "@/types/treatment"
@@ -68,6 +69,7 @@ export default async function ClientPage({ params }: ClientPageProps) {
         <TabsList>
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="treatments">Treatment Records</TabsTrigger>
+          <TabsTrigger value="packages">Packages</TabsTrigger>
           <TabsTrigger value="forms">Consent Forms</TabsTrigger>
         </TabsList>
         <TabsContent value="profile" className="mt-4">
@@ -75,6 +77,9 @@ export default async function ClientPage({ params }: ClientPageProps) {
         </TabsContent>
         <TabsContent value="treatments" className="mt-4">
           <ClientTreatmentRecords clientId={serializedClient.id} />
+        </TabsContent>
+        <TabsContent value="packages" className="mt-4">
+          <ClientPackages clientId={serializedClient.id} />
         </TabsContent>
         <TabsContent value="forms" className="mt-4">
           <ClientForms clientId={serializedClient.id} clientName={client.name} />
