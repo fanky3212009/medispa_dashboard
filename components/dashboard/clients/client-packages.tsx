@@ -53,6 +53,7 @@ export function ClientPackages({ clientId }: ClientPackagesProps) {
   const [purchasing, setPurchasing] = useState(false)
   const [isPurchaseDialogOpen, setIsPurchaseDialogOpen] = useState(false)
   const [selectedPackageId, setSelectedPackageId] = useState<string>("")
+  const [clientBalance, setClientBalance] = useState<number | null>(null)
 
   const fetchClientPackages = async () => {
     try {
@@ -78,13 +79,29 @@ export function ClientPackages({ clientId }: ClientPackagesProps) {
     }
   }
 
+  const fetchClient = async () => {
+    try {
+      const res = await fetch(`/api/clients/${clientId}`)
+      if (res.ok) {
+        const client = await res.json()
+        setClientBalance(parseFloat(client.balance ?? "0"))
+      }
+    } catch (error) {
+      console.error('Error fetching client:', error)
+    }
+  }
+
   useEffect(() => {
     const fetchData = async () => {
-      await Promise.all([fetchClientPackages(), fetchAvailablePackages()])
+      await Promise.all([fetchClientPackages(), fetchAvailablePackages(), fetchClient()])
       setLoading(false)
     }
     fetchData()
   }, [clientId])
+
+  const selectedPkg = availablePackages.find(p => p.id === selectedPackageId)
+  const selectedPackagePrice = selectedPkg ? parseFloat(selectedPkg.price as unknown as string) : 0
+  const insufficientFunds = clientBalance !== null && selectedPackagePrice > clientBalance
 
   const handlePurchasePackage = async () => {
     if (!selectedPackageId) return
@@ -100,12 +117,26 @@ export function ClientPackages({ clientId }: ClientPackagesProps) {
       })
 
       if (response.ok) {
+        const data = await response.json()
+        // Server returns updated balance and created records
+        if (data?.updatedBalance) {
+          setClientBalance(parseFloat(data.updatedBalance))
+        } else {
+          // Fallback: refetch client balance
+          await fetchClient()
+        }
         await fetchClientPackages()
         setIsPurchaseDialogOpen(false)
         setSelectedPackageId("")
       } else {
-        const error = await response.json()
-        alert(error.error || 'Failed to purchase package')
+        const error = await response.json().catch(() => ({}))
+        const message = error?.error || 'Failed to purchase package'
+        if (response.status === 400 && /insufficient/i.test(message)) {
+          // Suggest adding funds
+          alert(`${message}. Please add funds to the client's account before purchasing this package.`)
+        } else {
+          alert(message)
+        }
       }
     } catch (error) {
       console.error('Error purchasing package:', error)
@@ -190,87 +221,94 @@ export function ClientPackages({ clientId }: ClientPackagesProps) {
                 </Button>
                 <Button
                   onClick={handlePurchasePackage}
-                  disabled={purchasing || !selectedPackageId}
+                  disabled={purchasing || !selectedPackageId || insufficientFunds}
                 >
                   {purchasing ? "Purchasing..." : "Purchase"}
                 </Button>
+                {insufficientFunds && selectedPackageId && (
+                  <div className="text-sm text-red-600 mt-2">
+                    Insufficient balance to purchase this package. Please add funds to the client's account.
+                  </div>
+                )}
               </div>
             </div>
           </DialogContent>
         </Dialog>
       </div>
 
-      {clientPackages.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-8">
-            <Package className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">No packages purchased yet.</p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-4">
-          {clientPackages.map((clientPackage) => {
-            const status = getPackageStatus(clientPackage)
-            const used = clientPackage.package.totalSessions - clientPackage.sessionsRemaining
-            const total = clientPackage.package.totalSessions
+      {
+        clientPackages.length === 0 ? (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-8">
+              <Package className="h-12 w-12 text-muted-foreground mb-4" />
+              <p className="text-muted-foreground">No packages purchased yet.</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            {clientPackages.map((clientPackage) => {
+              const status = getPackageStatus(clientPackage)
+              const used = clientPackage.package.totalSessions - clientPackage.sessionsRemaining
+              const total = clientPackage.package.totalSessions
 
-            return (
-              <Card key={clientPackage.id}>
-                <CardHeader className="pb-3">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="text-lg">{clientPackage.package.name}</CardTitle>
-                      <p className="text-sm text-muted-foreground">
-                        {clientPackage.package.service.name} • ${clientPackage.package.price}
-                      </p>
-                    </div>
-                    <Badge variant={getStatusVariant(status)}>
-                      {status}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>Sessions Used</span>
-                        <span>
-                          {used} / {total}
-                        </span>
+              return (
+                <Card key={clientPackage.id}>
+                  <CardHeader className="pb-3">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <CardTitle className="text-lg">{clientPackage.package.name}</CardTitle>
+                        <p className="text-sm text-muted-foreground">
+                          {clientPackage.package.service.name} • ${clientPackage.package.price}
+                        </p>
                       </div>
+                      <Badge variant={getStatusVariant(status)}>
+                        {status}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div>
+                        <div className="flex justify-between text-sm mb-1">
+                          <span>Sessions Used</span>
+                          <span>
+                            {used} / {total}
+                          </span>
+                        </div>
 
-                      <div className="grid grid-cols-5 md:grid-cols-10 gap-3">
-                        {Array.from({ length: total }).map((_, i) => (
-                          <div key={i} className="flex items-center justify-center">
-                            <Checkbox
-                              className="h-8 w-8"
-                              checked={i < used}
-                              disabled
-                              aria-label={`Session ${i + 1} of ${total}: ${i < used ? 'used' : 'available'}`}
-                            />
+                        <div className="grid grid-cols-5 md:grid-cols-10 gap-3">
+                          {Array.from({ length: total }).map((_, i) => (
+                            <div key={i} className="flex items-center justify-center">
+                              <Checkbox
+                                className="h-8 w-8"
+                                checked={i < used}
+                                disabled
+                                aria-label={`Session ${i + 1} of ${total}: ${i < used ? 'used' : 'available'}`}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="text-muted-foreground">Purchased:</span>
+                          <div>{new Date(clientPackage.purchaseDate).toLocaleDateString()}</div>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Expires:</span>
+                          <div className={isPackageExpired(clientPackage.expiryDate) ? "text-red-600" : ""}>
+                            {new Date(clientPackage.expiryDate).toLocaleDateString()}
                           </div>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <span className="text-muted-foreground">Purchased:</span>
-                        <div>{new Date(clientPackage.purchaseDate).toLocaleDateString()}</div>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Expires:</span>
-                        <div className={isPackageExpired(clientPackage.expiryDate) ? "text-red-600" : ""}>
-                          {new Date(clientPackage.expiryDate).toLocaleDateString()}
                         </div>
                       </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )
-          })}
-        </div>
-      )}
-    </div>
+                  </CardContent>
+                </Card>
+              )
+            })}
+          </div>
+        )
+      }
+    </div >
   )
 }
