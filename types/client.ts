@@ -18,6 +18,8 @@ export interface Client {
   maritalStatus?: string | null
   referredBy?: string | null
   consultant?: string | null
+  ohipNumber?: string | null
+  insuranceCompany?: string | null
   balance: Decimal
   notes?: string | null
   createdAt: Date

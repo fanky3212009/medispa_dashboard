@@ -53,6 +53,8 @@ export async function PATCH(
       ...(body.referredBy !== undefined && { referredBy: body.referredBy }),
       ...(body.consultant !== undefined && { consultant: body.consultant }),
       ...(body.notes !== undefined && { notes: body.notes }),
+      ...(body.ohipNumber !== undefined && { ohipNumber: body.ohipNumber }),
+      ...(body.insuranceCompany !== undefined && { insuranceCompany: body.insuranceCompany }),
       ...(body.balance !== undefined && { balance: body.balance })
     }
 
