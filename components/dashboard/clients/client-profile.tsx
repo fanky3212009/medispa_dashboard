@@ -93,7 +93,10 @@ export function ClientProfile({ client }: ClientProfileProps) {
         gender: editedClient.gender || undefined,
         referredBy: editedClient.referredBy || undefined,
         consultant: editedClient.consultant || undefined,
-        balance: editedClient.balance ? parseFloat(editedClient.balance) : undefined
+        ohipNumber: editedClient.ohipNumber || undefined,
+        insuranceCompany: editedClient.insuranceCompany || undefined,
+        balance: editedClient.balance ? parseFloat(editedClient.balance) : undefined,
+        notes: editedClient.notes || undefined
       }
       await updateClient(client.id, updateData)
       setIsEditing(false)
@@ -258,6 +261,35 @@ export function ClientProfile({ client }: ClientProfileProps) {
                         onChange={(e) => setEditedClient({ ...editedClient, consultant: e.target.value })}
                       />
                     </div>
+
+                    <div className="grid gap-2">
+                      <Label htmlFor="ohipNumber">OHIP Number</Label>
+                      <Input
+                        id="ohipNumber"
+                        value={editedClient.ohipNumber ?? ''}
+                        onChange={(e) => setEditedClient({ ...editedClient, ohipNumber: e.target.value })}
+                      />
+                    </div>
+
+                    <div className="grid gap-2">
+                      <Label htmlFor="insuranceCompany">Insurance Company</Label>
+                      <Input
+                        id="insuranceCompany"
+                        value={editedClient.insuranceCompany ?? ''}
+                        onChange={(e) => setEditedClient({ ...editedClient, insuranceCompany: e.target.value })}
+                      />
+                    </div>
+
+                    <div className="grid gap-2">
+                      <Label htmlFor="notes">Notes</Label>
+                      <Textarea
+                        id="notes"
+                        value={editedClient.notes ?? ''}
+                        onChange={(e) => setEditedClient({ ...editedClient, notes: e.target.value })}
+                        className="resize-none"
+                      />
+                    </div>
+
                     <Button onClick={handleSave}>Save Changes</Button>
                   </div>
                 </DialogContent>
@@ -302,6 +334,21 @@ export function ClientProfile({ client }: ClientProfileProps) {
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Consultant</p>
                   <p>{client.consultant ?? 'Not set'}</p>
+                </div>
+
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">OHIP Number</p>
+                  <p>{client.ohipNumber ?? 'Not set'}</p>
+                </div>
+
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Insurance Company</p>
+                  <p>{client.insuranceCompany ?? 'Not set'}</p>
+                </div>
+
+                <div className="col-span-2">
+                  <p className="text-sm font-medium text-muted-foreground">Notes</p>
+                  <p className="whitespace-pre-wrap">{client.notes ?? 'No notes'}</p>
                 </div>
               </div>
             </CardContent>

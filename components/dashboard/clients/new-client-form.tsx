@@ -41,6 +41,8 @@ const formSchema = z.object({
   referredBy: z.string().optional(),
   consultant: z.string().optional(),
   notes: z.string().optional(),
+  ohipNumber: z.string().optional(),
+  insuranceCompany: z.string().optional(),
   // Patient Intake fields
   skinType: z.string().optional(),
   wrinkleType: z.string().optional(),
@@ -114,6 +116,8 @@ export function NewClientForm() {
       referredBy: "",
       consultant: "",
       notes: "",
+      ohipNumber: "",
+      insuranceCompany: "",
       // Patient Intake defaults
       skinType: "",
       wrinkleType: "",
@@ -186,6 +190,8 @@ export function NewClientForm() {
         maritalStatus: values.maritalStatus || undefined,
         referredBy: values.referredBy || undefined,
         consultant: values.consultant || undefined,
+        ohipNumber: values.ohipNumber || undefined,
+        insuranceCompany: values.insuranceCompany || undefined,
         notes: values.notes || undefined
       }
 
@@ -460,6 +466,34 @@ export function NewClientForm() {
                   </FormItem>
                 )}
               />
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="ohipNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>OHIP Number (Optional)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="OHIP number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="insuranceCompany"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Insurance Company (Optional)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Insurance company" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
 
             <div className="mt-6">

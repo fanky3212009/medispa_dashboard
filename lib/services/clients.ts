@@ -56,6 +56,8 @@ export async function createClient(data: {
   referredBy?: string
   consultant?: string
   notes?: string
+  ohipNumber?: string
+  insuranceCompany?: string
 }) {
   try {
     const response = await fetch(`${getBaseUrl()}/api/clients`, {
@@ -86,6 +88,8 @@ export async function updateClient(id: string, data: {
   referredBy?: string
   consultant?: string
   notes?: string
+  ohipNumber?: string
+  insuranceCompany?: string
   balance?: number
 }) {
   try {
