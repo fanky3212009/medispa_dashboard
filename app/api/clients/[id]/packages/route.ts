@@ -8,7 +8,7 @@ export async function GET(
   try {
     const { id } = await Promise.resolve(params)
     
-    const clientPackages = await prisma.clientPackage.findMany({
+    const clientPackages = await (prisma as any).clientPackage.findMany({
       where: { clientId: id },
       include: {
         package: {
@@ -62,8 +62,20 @@ export async function POST(
       )
     }
 
+    // Load client
+    const client = await prisma.client.findUnique({
+      where: { id: clientId }
+    })
+
+    if (!client) {
+      return NextResponse.json(
+        { error: 'Client not found' },
+        { status: 404 }
+      )
+    }
+
     // Check if client already has an active package for this service
-    const existingActivePackage = await prisma.clientPackage.findFirst({
+    const existingActivePackage = await (prisma as any).clientPackage.findFirst({
       where: {
         clientId,
         package: {
@@ -83,36 +95,78 @@ export async function POST(
       )
     }
 
+    // Prevent purchases that would make balance negative
+    const clientBalance = parseFloat(client.balance.toString())
+    const packagePrice = parseFloat(pkg.price.toString())
+
+    if (clientBalance < packagePrice) {
+      return NextResponse.json(
+        { error: "Insufficient balance — please add funds to the client's account" },
+        { status: 400 }
+      )
+    }
+
     // Create client package with expiry date (500 days from purchase)
     const purchaseDate = new Date()
     const expiryDate = new Date(purchaseDate.getTime() + (500 * 24 * 60 * 60 * 1000))
+    const newBalance = (clientBalance - packagePrice).toFixed(2)
 
-    const clientPackage = await prisma.clientPackage.create({
-      data: {
-        clientId,
-        packageId,
-        sessionsRemaining: pkg.totalSessions,
-        purchaseDate,
-        expiryDate
-      },
-      include: {
-        package: {
-          include: {
-            service: true
+    // Run transaction: create clientPackage, update client balance, create treatment record
+    const [createdClientPackage, updatedClient, createdTreatmentRecord] = await prisma.$transaction([
+      (prisma as any).clientPackage.create({
+        data: {
+          clientId,
+          packageId,
+          sessionsRemaining: pkg.totalSessions,
+          purchaseDate,
+          expiryDate
+        },
+        include: {
+          package: {
+            include: {
+              service: true
+            }
           }
         }
-      }
-    })
+      }),
+      prisma.client.update({
+        where: { id: clientId },
+        data: {
+          balance: newBalance
+        }
+      }),
+      prisma.treatmentRecord.create({
+        data: {
+          clientId,
+          date: purchaseDate,
+          totalAmount: pkg.price,
+          balanceAfter: newBalance,
+          staffName: 'System',
+          type: 'PACKAGE_PURCHASE',
+          notes: `Package purchase: ${pkg.name}`
+        }
+      })
+    ])
 
     const serializedClientPackage = {
-      ...clientPackage,
+      ...createdClientPackage,
       package: {
-        ...clientPackage.package,
-        price: clientPackage.package.price.toString()
+        ...createdClientPackage.package,
+        price: createdClientPackage.package.price.toString()
       }
     }
 
-    return NextResponse.json(serializedClientPackage)
+    const serializedTreatmentRecord = {
+      ...createdTreatmentRecord,
+      totalAmount: createdTreatmentRecord.totalAmount.toString(),
+      balanceAfter: createdTreatmentRecord.balanceAfter.toString()
+    }
+
+    return NextResponse.json({
+      clientPackage: serializedClientPackage,
+      updatedBalance: updatedClient.balance.toString(),
+      treatmentRecord: serializedTreatmentRecord
+    })
   } catch (error) {
     console.error('Error purchasing package:', error)
     return NextResponse.json(
