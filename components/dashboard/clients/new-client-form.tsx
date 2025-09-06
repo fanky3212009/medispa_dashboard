@@ -182,7 +182,7 @@ export function NewClientForm() {
       // Create client with basic info
       const clientData = {
         name: values.name,
-        email: values.email && values.email.trim() !== "" ? values.email : undefined,
+        email: values.email && values.email.trim() !== "" ? values.email : null,
         phone: values.phone,
         dob: values.dob,
         gender: values.gender,
