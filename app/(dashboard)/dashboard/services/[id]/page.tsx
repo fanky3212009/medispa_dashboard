@@ -141,7 +141,7 @@ export default function ServicePage({ params }: ServicePageProps) {
                 <p className="text-sm font-medium text-muted-foreground">Total Bookings</p>
                 <div className="flex items-center gap-2">
                   <div className="text-2xl font-bold">42</div>
-                  <Badge variant="success" className="bg-green-100 text-green-800">
+                  <Badge variant="default" className="bg-green-100 text-green-800">
                     +12%
                   </Badge>
                 </div>
@@ -151,7 +151,7 @@ export default function ServicePage({ params }: ServicePageProps) {
                 <p className="text-sm font-medium text-muted-foreground">Revenue</p>
                 <div className="flex items-center gap-2">
                   <div className="text-2xl font-bold">$8,640</div>
-                  <Badge variant="success" className="bg-green-100 text-green-800">
+                  <Badge variant="default" className="bg-green-100 text-green-800">
                     +8%
                   </Badge>
                 </div>
@@ -161,7 +161,7 @@ export default function ServicePage({ params }: ServicePageProps) {
                 <p className="text-sm font-medium text-muted-foreground">Average Rating</p>
                 <div className="flex items-center gap-2">
                   <div className="text-2xl font-bold">4.8/5</div>
-                  <Badge variant="success" className="bg-green-100 text-green-800">
+                  <Badge variant="default" className="bg-green-100 text-green-800">
                     +0.2
                   </Badge>
                 </div>
@@ -174,4 +174,3 @@ export default function ServicePage({ params }: ServicePageProps) {
     </div>
   )
 }
-

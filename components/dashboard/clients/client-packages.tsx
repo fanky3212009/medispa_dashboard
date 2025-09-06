@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, Package } from "lucide-react"
+import { Plus, Package, Edit, Trash } from "lucide-react"
 
 interface ClientPackage {
   id: string
@@ -54,6 +54,10 @@ export function ClientPackages({ clientId }: ClientPackagesProps) {
   const [isPurchaseDialogOpen, setIsPurchaseDialogOpen] = useState(false)
   const [selectedPackageId, setSelectedPackageId] = useState<string>("")
   const [clientBalance, setClientBalance] = useState<number | null>(null)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [editingPackage, setEditingPackage] = useState<ClientPackage | null>(null)
+  const [editPurchaseDate, setEditPurchaseDate] = useState<string>("")
+  const [isCancelling, setIsCancelling] = useState(false)
 
   const fetchClientPackages = async () => {
     try {
@@ -143,6 +147,55 @@ export function ClientPackages({ clientId }: ClientPackagesProps) {
       alert('Failed to purchase package')
     } finally {
       setPurchasing(false)
+    }
+  }
+
+  const openEditDialog = (pkg: ClientPackage) => {
+    setEditingPackage(pkg)
+    setEditPurchaseDate(new Date(pkg.purchaseDate).toISOString().slice(0, 10))
+    setIsEditDialogOpen(true)
+  }
+
+  const handleSaveEdit = async () => {
+    if (!editingPackage) return
+    try {
+      const res = await fetch(`/api/clients/${clientId}/packages/${editingPackage.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ purchaseDate: editPurchaseDate })
+      })
+      if (res.ok) {
+        await fetchClientPackages()
+        setIsEditDialogOpen(false)
+        setEditingPackage(null)
+      } else {
+        const err = await res.json().catch(() => ({}))
+        alert(err.error || 'Failed to update package')
+      }
+    } catch (err) {
+      console.error('Error updating package:', err)
+      alert('Failed to update package')
+    }
+  }
+
+  const handleCancelPackage = async (pkgId: string) => {
+    if (!confirm('Cancel this package? This will mark it inactive with no refund.')) return
+    setIsCancelling(true)
+    try {
+      const res = await fetch(`/api/clients/${clientId}/packages/${pkgId}`, {
+        method: 'DELETE'
+      })
+      if (res.ok) {
+        await fetchClientPackages()
+      } else {
+        const err = await res.json().catch(() => ({}))
+        alert(err.error || 'Failed to cancel package')
+      }
+    } catch (err) {
+      console.error('Error cancelling package:', err)
+      alert('Failed to cancel package')
+    } finally {
+      setIsCancelling(false)
     }
   }
 
@@ -236,6 +289,33 @@ export function ClientPackages({ clientId }: ClientPackagesProps) {
         </Dialog>
       </div>
 
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Package Purchase Date</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">Purchase Date</label>
+              <input
+                type="date"
+                value={editPurchaseDate}
+                onChange={(e) => setEditPurchaseDate(e.target.value)}
+                className="mt-1 block w-full rounded-md border input"
+              />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => { setIsEditDialogOpen(false); setEditingPackage(null); }}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveEdit}>
+                Save
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {
         clientPackages.length === 0 ? (
           <Card>
@@ -261,9 +341,17 @@ export function ClientPackages({ clientId }: ClientPackagesProps) {
                           {clientPackage.package.service.name} • ${clientPackage.package.price}
                         </p>
                       </div>
-                      <Badge variant={getStatusVariant(status)}>
-                        {status}
-                      </Badge>
+                      <div className="flex items-center space-x-2">
+                        <Badge variant={getStatusVariant(status)}>
+                          {status}
+                        </Badge>
+                        <Button variant="ghost" size="sm" onClick={() => openEditDialog(clientPackage)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="destructive" size="sm" onClick={() => handleCancelPackage(clientPackage.id)} disabled={isCancelling}>
+                          <Trash className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent>
