@@ -95,7 +95,8 @@ export function ClientProfile({ client }: ClientProfileProps) {
         consultant: editedClient.consultant || undefined,
         ohipNumber: editedClient.ohipNumber || undefined,
         insuranceCompany: editedClient.insuranceCompany || undefined,
-        balance: editedClient.balance ? parseFloat(editedClient.balance) : undefined
+        balance: editedClient.balance ? parseFloat(editedClient.balance) : undefined,
+        notes: editedClient.notes || undefined
       }
       await updateClient(client.id, updateData)
       setIsEditing(false)
