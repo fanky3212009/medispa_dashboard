@@ -35,11 +35,12 @@ async function getClientBalanceHistory(id: string): Promise<SerializedTreatmentR
   }));
 }
 
-export default async function BalanceHistoryPage({ params }: { params: { id: string } }) {
+export default async function BalanceHistoryPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   // Get client and treatment records
   const [client, records] = await Promise.all([
-    getClientById(params.id),
-    getClientBalanceHistory(params.id)
+    getClientById(id),
+    getClientBalanceHistory(id)
   ])
 
   return (
@@ -47,7 +48,7 @@ export default async function BalanceHistoryPage({ params }: { params: { id: str
       <div className="mb-6 flex items-center justify-between">
         <div className="space-y-1">
           <Button variant="ghost" size="sm" className="mb-2" asChild>
-            <Link href={`/dashboard/clients/${params.id}`}>
+            <Link href={`/dashboard/clients/${id}`}>
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Client
             </Link>

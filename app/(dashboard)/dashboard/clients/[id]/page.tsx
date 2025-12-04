@@ -16,13 +16,13 @@ export const metadata: Metadata = {
 }
 
 interface ClientPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 export default async function ClientPage({ params }: ClientPageProps) {
-  const { id } = await Promise.resolve(params)
+  const { id } = await params
 
   type ClientWithRecords = Client & {
     treatmentRecords: (TreatmentRecord & {

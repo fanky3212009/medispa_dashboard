@@ -13,9 +13,9 @@ export const metadata: Metadata = {
 }
 
 interface AppointmentPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 // Mock data for appointments
@@ -60,9 +60,10 @@ const appointments = [
   },
 ]
 
-export default function AppointmentPage({ params }: AppointmentPageProps) {
+export default async function AppointmentPage({ params }: AppointmentPageProps) {
+  const { id } = await params
   // In a real app, you would fetch the appointment data from your API
-  const appointment = appointments.find((a) => a.id === params.id)
+  const appointment = appointments.find((a) => a.id === id)
 
   if (!appointment) {
     notFound()

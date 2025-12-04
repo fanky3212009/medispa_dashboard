@@ -12,9 +12,9 @@ export const metadata: Metadata = {
 }
 
 interface ServicePageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 // Mock data for services
@@ -54,9 +54,10 @@ const services = [
   },
 ]
 
-export default function ServicePage({ params }: ServicePageProps) {
+export default async function ServicePage({ params }: ServicePageProps) {
+  const { id } = await params
   // In a real app, you would fetch the service data from your API
-  const service = services.find((s) => s.id === params.id)
+  const service = services.find((s) => s.id === id)
 
   if (!service) {
     notFound()
