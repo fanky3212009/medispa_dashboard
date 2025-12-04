@@ -916,9 +916,19 @@ export function ClientProfile({ client }: ClientProfileProps) {
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-medium">Balance</h3>
-                <p className="text-2xl font-bold">CA$ {Number(editedClient.balance).toFixed(2)}</p>
+              <div className="flex gap-8">
+                <div>
+                  <h3 className="text-lg font-medium">Balance</h3>
+                  <p className="text-2xl font-bold">CA$ {Number(editedClient.balance).toFixed(2)}</p>
+                </div>
+                <div>
+                  <h3 className="text-lg font-medium text-muted-foreground">Total Expense</h3>
+                  <p className="text-2xl font-bold text-muted-foreground">CA$ {Number(client.totalSpent || 0).toFixed(2)}</p>
+                </div>
+                <div>
+                  <h3 className="text-lg font-medium text-muted-foreground">Total Added</h3>
+                  <p className="text-2xl font-bold text-muted-foreground">CA$ {Number(client.totalDeposited || 0).toFixed(2)}</p>
+                </div>
               </div>
               <div>
                 <Button asChild>

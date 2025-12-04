@@ -48,9 +48,24 @@ export default async function ClientPage({ params }: ClientPageProps) {
     notFound()
   }
 
+  // Calculate totals from fetched records
+  let totalSpent = 0
+  let totalDeposited = 0
+
+  client.treatmentRecords.forEach(record => {
+    const amount = Number(record.totalAmount) || 0
+    if (['TREATMENT', 'PACKAGE_PURCHASE'].includes(record.type)) {
+      totalSpent += amount
+    } else if (record.type === 'FUND_ADDITION') {
+      totalDeposited += amount
+    }
+  })
+
   const serializedClient: SerializedClient = {
     ...client,
     balance: client.balance.toString(),
+    totalSpent: totalSpent.toFixed(2),
+    totalDeposited: totalDeposited.toFixed(2),
     treatmentRecords: client.treatmentRecords?.map(record => ({
       ...record,
       totalAmount: record.totalAmount.toString(),

@@ -3,12 +3,13 @@ import prisma from "@/lib/db"
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const treatmentRecords = await prisma.treatmentRecord.findMany({
       where: {
-        clientId: params.id
+        clientId: id
       },
       include: {
         treatments: true
@@ -29,9 +30,10 @@ export async function GET(
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const body = await request.json()
     const { date, staffName, notes, treatments, type = "TREATMENT", totalAmount, usePackages = true } = body
 
@@ -45,7 +47,7 @@ export async function POST(
     const treatmentRecord = await prisma.$transaction(async (tx) => {
       // Get current client balance
       const client = await tx.client.findUnique({
-        where: { id: params.id },
+        where: { id },
         select: { balance: true }
       })
 

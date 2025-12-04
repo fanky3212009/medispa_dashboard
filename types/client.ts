@@ -3,6 +3,8 @@ import type { Decimal } from "@prisma/client/runtime/library"
 
 export interface SerializedClient extends Omit<Client, 'balance' | 'treatmentRecords'> {
   balance: string
+  totalSpent?: string
+  totalDeposited?: string
   treatmentRecords?: SerializedTreatmentRecord[]
   patientIntake?: PatientIntake | null
 }
