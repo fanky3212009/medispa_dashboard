@@ -31,9 +31,7 @@ const nextConfig = {
     return config;
   },
   output: 'standalone',
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  turbopack: {},
   typescript: {
     ignoreBuildErrors: true,
   },

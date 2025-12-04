@@ -1,3 +1,7 @@
+
+/* Import signature pad styles */
+@import "../styles/signature-pad.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -58,5 +62,3 @@
   }
 }
 
-/* Import signature pad styles */
-@import "../styles/signature-pad.css";
