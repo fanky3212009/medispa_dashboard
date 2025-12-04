@@ -17,11 +17,12 @@ const updateServiceSchema = z.object({
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const service = await prisma.service.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         variants: {
           orderBy: { price: 'asc' }
@@ -48,15 +49,16 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const body = await request.json()
     const validatedData = updateServiceSchema.parse(body)
 
     // Check if service exists
     const existingService = await prisma.service.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: { variants: true }
     })
 
@@ -90,23 +92,42 @@ export async function PUT(
 
     // Handle variants update if provided
     if (validatedData.variants) {
-      // Delete all existing variants and create new ones
-      // This is a simple approach - could be optimized to update existing ones
-      await prisma.serviceVariant.deleteMany({
-        where: { serviceId: params.id }
-      })
+      // Optimize variant updates: identify create, update, and delete operations
+      const incomingVariants = validatedData.variants
+      const incomingIds = incomingVariants
+        .filter(v => v.id)
+        .map(v => v.id as string)
+      
+      // Get existing variant IDs to determine what to delete
+      // We can use existingService.variants since we included them in the fetch above
+      const existingVariantIds = existingService.variants.map(v => v.id)
+      
+      const idsToDelete = existingVariantIds.filter(id => !incomingIds.includes(id))
+      const variantsToCreate = incomingVariants.filter(v => !v.id)
+      const variantsToUpdate = incomingVariants.filter(v => v.id && existingVariantIds.includes(v.id))
 
       updateData.variants = {
-        create: validatedData.variants.map(variant => ({
+        deleteMany: {
+          id: { in: idsToDelete }
+        },
+        create: variantsToCreate.map(variant => ({
           name: variant.name,
           duration: variant.duration,
           price: variant.price,
+        })),
+        update: variantsToUpdate.map(variant => ({
+          where: { id: variant.id },
+          data: {
+            name: variant.name,
+            duration: variant.duration,
+            price: variant.price,
+          }
         }))
       }
     }
 
     const service = await prisma.service.update({
-      where: { id: params.id },
+      where: { id },
       data: updateData,
       include: {
         variants: {
@@ -135,12 +156,13 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     // Check if service exists
     const existingService = await prisma.service.findUnique({
-      where: { id: params.id }
+      where: { id }
     })
 
     if (!existingService) {
@@ -152,7 +174,7 @@ export async function DELETE(
 
     // Check if service is being used in appointments
     const appointmentCount = await prisma.appointment.count({
-      where: { serviceId: params.id }
+      where: { serviceId: id }
     })
 
     if (appointmentCount > 0) {
@@ -164,7 +186,7 @@ export async function DELETE(
 
     // Delete service (variants will be deleted automatically due to cascade)
     await prisma.service.delete({
-      where: { id: params.id }
+      where: { id }
     })
 
     return NextResponse.json({ message: 'Service deleted successfully' })

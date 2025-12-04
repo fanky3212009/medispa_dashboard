@@ -4,10 +4,17 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { ArrowLeft, Filter, MoreVertical, Plus, Search, Smile, Tag } from "lucide-react"
+import { ArrowLeft, Filter, MoreVertical, Plus, Search, Smile, Tag, Edit, Trash } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { toast } from "sonner"
 
 type ServiceVariant = {
   id: string
@@ -44,7 +51,8 @@ export function ServiceMenu() {
     async function fetchServices() {
       try {
         setLoading(true)
-        const response = await fetch('/api/services')
+        // Fetch all services, including inactive ones
+        const response = await fetch('/api/services?active=false')
         if (!response.ok) throw new Error('Failed to fetch services')
         const data: Service[] = await response.json()
         setServices(data)
@@ -54,11 +62,9 @@ export function ServiceMenu() {
         let totalCount = 0
 
         data.forEach(service => {
-          if (service.isActive) {
-            totalCount++
-            const count = categoryMap.get(service.category) || 0
-            categoryMap.set(service.category, count + 1)
-          }
+          totalCount++
+          const count = categoryMap.get(service.category) || 0
+          categoryMap.set(service.category, count + 1)
         })
 
         const calculatedCategories: Category[] = [
@@ -86,13 +92,39 @@ export function ServiceMenu() {
     router.push("/dashboard/services/new")
   }
 
+  const handleEditService = (id: string) => {
+    router.push(`/dashboard/services/${id}/edit`)
+  }
+
+  const handleDeactivateService = async (id: string, currentStatus: boolean) => {
+    const action = currentStatus ? "deactivate" : "activate"
+    if (!confirm(`Are you sure you want to ${action} this service?`)) return
+
+    try {
+      const response = await fetch(`/api/services/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ isActive: !currentStatus }),
+      })
+
+      if (!response.ok) throw new Error(`Failed to ${action} service`)
+
+      setServices(services.map((s) => (s.id === id ? { ...s, isActive: !currentStatus } : s)))
+      toast.success(`Service ${action}d successfully`)
+    } catch (error) {
+      console.error(`Error ${action}ing service:`, error)
+      toast.error(`Failed to ${action} service`)
+    }
+  }
+
   const handleBack = () => {
     router.back()
   }
 
   const filteredServices = services.filter(
     (service) =>
-      service.isActive &&
       (selectedCategory === "all" || service.category === selectedCategory) &&
       service.name.toLowerCase().includes(searchQuery.toLowerCase()),
   )
@@ -183,12 +215,41 @@ export function ServiceMenu() {
           </div>
         ) : (
           filteredServices.map((service) => (
-            <div key={service.id} className="p-4 border-b">
+            <div key={service.id} className={cn("p-4 border-b", !service.isActive && "bg-gray-50 opacity-75")}>
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-xl font-bold">{service.name}</h3>
-                <Button variant="ghost" size="icon">
-                  <MoreVertical className="h-5 w-5" />
-                </Button>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-xl font-bold">{service.name}</h3>
+                  {!service.isActive && <Badge variant="secondary">Inactive</Badge>}
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <MoreVertical className="h-5 w-5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => handleEditService(service.id)}>
+                      <Edit className="mr-2 h-4 w-4" />
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className={service.isActive ? "text-red-600 focus:text-red-600" : "text-green-600 focus:text-green-600"}
+                      onClick={() => handleDeactivateService(service.id, service.isActive)}
+                    >
+                      {service.isActive ? (
+                        <>
+                          <Trash className="mr-2 h-4 w-4" />
+                          Deactivate
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="mr-2 h-4 w-4" />
+                          Activate
+                        </>
+                      )}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
 
               {service.variants.map((variant) => (
@@ -210,35 +271,6 @@ export function ServiceMenu() {
             </div>
           ))
         )}
-      </div>
-
-      <div className="flex justify-around p-4 border-t bg-white">
-        <Button variant="ghost" className="flex flex-col items-center gap-1">
-          <div className="h-6 w-6 flex items-center justify-center">
-            <span className="text-xs">31</span>
-          </div>
-          <span className="text-xs">Calendar</span>
-        </Button>
-        <Button variant="ghost" className="flex flex-col items-center gap-1">
-          <Tag className="h-6 w-6" />
-          <span className="text-xs">Tags</span>
-        </Button>
-        <Button className="flex flex-col items-center justify-center h-14 w-14 rounded-full bg-primary text-primary-foreground -mt-10">
-          <Plus className="h-8 w-8" />
-        </Button>
-        <Button variant="ghost" className="flex flex-col items-center gap-1">
-          <Smile className="h-6 w-6" />
-          <span className="text-xs">Clients</span>
-        </Button>
-        <Button variant="ghost" className="flex flex-col items-center gap-1">
-          <div className="grid grid-cols-2 gap-0.5">
-            <div className="h-1.5 w-1.5 rounded-sm bg-current"></div>
-            <div className="h-1.5 w-1.5 rounded-sm bg-current"></div>
-            <div className="h-1.5 w-1.5 rounded-sm bg-current"></div>
-            <div className="h-1.5 w-1.5 rounded-sm bg-current"></div>
-          </div>
-          <span className="text-xs">More</span>
-        </Button>
       </div>
     </div>
   )

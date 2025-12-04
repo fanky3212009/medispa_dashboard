@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { NewServiceForm } from "@/components/dashboard/services/new-service-form"
+import { ServiceForm } from "@/components/dashboard/services/new-service-form"
 
 export const metadata: Metadata = {
   title: "New Service | SkinPlus Medical Spa",
@@ -14,7 +14,7 @@ export default function NewServicePage() {
         <p className="text-muted-foreground">Add a new service to your medical spa</p>
       </div>
 
-      <NewServiceForm />
+      <ServiceForm />
     </div>
   )
 }

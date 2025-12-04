@@ -50,27 +50,44 @@ type ServiceVariant = {
   price: number
 }
 
-export function NewServiceForm() {
+interface ServiceFormProps {
+  initialData?: {
+    name: string
+    category: string
+    description?: string
+    isActive: boolean
+    variants: ServiceVariant[]
+  }
+  serviceId?: string
+}
+
+export function ServiceForm({ initialData, serviceId }: ServiceFormProps) {
   const router = useRouter()
   const { toast } = useToast()
-  const [variants, setVariants] = useState<ServiceVariant[]>([{ name: "", duration: 60, price: 0 }])
+  const [variants, setVariants] = useState<ServiceVariant[]>(
+    initialData?.variants || [{ name: "", duration: 60, price: 0 }]
+  )
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
-      description: "",
-      isActive: true,
-      variants: [{ name: "", duration: 60, price: 0 }],
+      name: initialData?.name || "",
+      category: initialData?.category || "",
+      description: initialData?.description || "",
+      isActive: initialData?.isActive ?? true,
+      variants: initialData?.variants || [{ name: "", duration: 60, price: 0 }],
     },
   })
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true)
     try {
-      const response = await fetch('/api/services', {
-        method: 'POST',
+      const url = serviceId ? `/api/services/${serviceId}` : '/api/services'
+      const method = serviceId ? 'PUT' : 'POST'
+
+      const response = await fetch(url, {
+        method: method,
         headers: {
           'Content-Type': 'application/json',
         },
@@ -79,23 +96,24 @@ export function NewServiceForm() {
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to create service')
+        throw new Error(errorData.error || `Failed to ${serviceId ? 'update' : 'create'} service`)
       }
 
       const service = await response.json()
 
       toast({
-        title: "Service created",
-        description: `${service.name} has been added to your service menu.`,
+        title: `Service ${serviceId ? 'updated' : 'created'}`,
+        description: `${service.name} has been ${serviceId ? 'updated' : 'added to your service menu'}.`,
       })
 
       // Redirect to the services list
       router.push("/dashboard/services")
+      router.refresh()
     } catch (error) {
-      console.error('Error creating service:', error)
+      console.error(`Error ${serviceId ? 'updating' : 'creating'} service:`, error)
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : 'Failed to create service',
+        description: error instanceof Error ? error.message : `Failed to ${serviceId ? 'update' : 'create'} service`,
         variant: "destructive",
       })
     } finally {
@@ -301,7 +319,7 @@ export function NewServiceForm() {
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Creating..." : "Create Service"}
+            {isSubmitting ? (serviceId ? "Saving..." : "Creating...") : (serviceId ? "Save Service" : "Create Service")}
           </Button>
         </div>
       </form>

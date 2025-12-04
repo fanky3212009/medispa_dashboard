@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Clock, Edit, Trash } from "lucide-react"
+import prisma from "@/lib/db"
 
 export const metadata: Metadata = {
   title: "Service Details | SkinPlus Medical Spa",
@@ -17,47 +18,17 @@ interface ServicePageProps {
   }>
 }
 
-// Mock data for services
-const services = [
-  {
-    id: "1",
-    name: "SYNA韓國無創氣墊針",
-    category: "facial",
-    description:
-      "A non-invasive treatment that uses micro-needles to deliver active ingredients deep into the skin, promoting collagen production and skin rejuvenation.",
-    isActive: true,
-    variants: [
-      { id: "1-1", name: "SYNA韓國無創氣墊針", duration: 60, price: 380 },
-      { id: "1-2", name: "First trial", duration: 60, price: 188 },
-    ],
-  },
-  {
-    id: "2",
-    name: "DEP無針滲透水光",
-    category: "facial",
-    description:
-      "A needle-free hydration treatment that uses advanced technology to deliver hyaluronic acid and other nutrients deep into the skin for intense hydration.",
-    isActive: true,
-    variants: [
-      { id: "2-1", name: "DEP無針滲透水光", duration: 60, price: 380 },
-      { id: "2-2", name: "First trial", duration: 60, price: 188 },
-    ],
-  },
-  {
-    id: "3",
-    name: "Visia 皮膚檢測",
-    category: "facial",
-    description:
-      "A comprehensive skin analysis system that uses multi-spectral imaging to evaluate various aspects of skin health and aging.",
-    isActive: true,
-    variants: [{ id: "3-1", name: "Visia 皮膚檢測", duration: 30, price: 100 }],
-  },
-]
-
 export default async function ServicePage({ params }: ServicePageProps) {
   const { id } = await params
-  // In a real app, you would fetch the service data from your API
-  const service = services.find((s) => s.id === id)
+
+  const service = await prisma.service.findUnique({
+    where: { id },
+    include: {
+      variants: {
+        orderBy: { price: 'asc' }
+      }
+    }
+  })
 
   if (!service) {
     notFound()
